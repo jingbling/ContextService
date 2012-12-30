@@ -63,7 +63,9 @@ java.util.List<java.lang.String> _arg0;
 _arg0 = data.createStringArrayList();
 java.lang.String _arg1;
 _arg1 = data.readString();
-this.gatherTrainingData(_arg0, _arg1);
+java.lang.String _arg2;
+_arg2 = data.readString();
+this.gatherTrainingData(_arg0, _arg1, _arg2);
 reply.writeNoException();
 return true;
 }
@@ -105,7 +107,7 @@ _data.recycle();
 }
 return _result;
 }
-@Override public void gatherTrainingData(java.util.List<java.lang.String> featuresToUse, java.lang.String contextGroup) throws android.os.RemoteException
+@Override public void gatherTrainingData(java.util.List<java.lang.String> featuresToUse, java.lang.String contextGroup, java.lang.String filename) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -113,6 +115,7 @@ try {
 _data.writeInterfaceToken(DESCRIPTOR);
 _data.writeStringList(featuresToUse);
 _data.writeString(contextGroup);
+_data.writeString(filename);
 mRemote.transact(Stub.TRANSACTION_gatherTrainingData, _data, _reply, 0);
 _reply.readException();
 }
@@ -126,5 +129,5 @@ static final int TRANSACTION_getContext = (android.os.IBinder.FIRST_CALL_TRANSAC
 static final int TRANSACTION_gatherTrainingData = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
 }
 public java.lang.String getContext(java.util.List<java.lang.String> featuresToUse, java.lang.String classifierToUse, java.lang.String contextGroup) throws android.os.RemoteException;
-public void gatherTrainingData(java.util.List<java.lang.String> featuresToUse, java.lang.String contextGroup) throws android.os.RemoteException;
+public void gatherTrainingData(java.util.List<java.lang.String> featuresToUse, java.lang.String contextGroup, java.lang.String filename) throws android.os.RemoteException;
 }

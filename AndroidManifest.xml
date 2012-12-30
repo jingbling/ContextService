@@ -8,14 +8,7 @@
                 <action android:name="org.jingbling.ContextEngine.IContextService" />
             </intent-filter>
         </service>
-        <activity android:name=".ContextServiceAct"
-                  android:label="@string/app_name">
-            <intent-filter >
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
+        <activity android:name="DataCollectionAct" />
     </application>
 
 </manifest>

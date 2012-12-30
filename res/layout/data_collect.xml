@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent">
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+        <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Select action to train:"
+                />
+        <Spinner
+                android:id="@+id/context_to_train"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" />
+    </LinearLayout>
+
+
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+        <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Press Train to begin data collection:"
+                />
+    </LinearLayout>
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+        <Button
+                android:id="@+id/btnStartTrain"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:text="   Start Training    "
+                android:textSize="10dp"
+                />
+        <Button
+                android:id="@+id/btnAbortTrain"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:text=" Abort Training "
+                android:textSize="10dp"
+                />
+
+    </LinearLayout>
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+        <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Press Exit to complete training and save file:"
+                />
+        <Button
+                android:id="@+id/btnExitTrain"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:text=" Exit Training "
+                android:textSize="10dp"
+                />
+        <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Training Countdown:"
+                />
+        <TextView
+                android:id="@+id/CountDownTxt" android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.0"
+                />
+    </LinearLayout>
+</LinearLayout>
