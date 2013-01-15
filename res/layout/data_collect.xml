@@ -63,8 +63,16 @@
         <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Press Exit to complete training and save file:"
+                android:text="Press Exit to complete training and Write to save file:"
                 />
+        <Button
+                android:id="@+id/btnWriteFile"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:text=" Write File "
+                android:textSize="10dp"
+                />
+
         <Button
                 android:id="@+id/btnExitTrain"
                 android:layout_width="wrap_content"

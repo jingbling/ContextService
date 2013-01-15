@@ -2,14 +2,21 @@ package org.jingbling.ContextEngine;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.*;
-import android.os.Process;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -24,11 +31,12 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private String contextGroup;
     private String[] contextLabels;
     private String trainingFileName;
-    private StringBuffer dataToWrite;
+    private StringBuffer dataToWrite = new StringBuffer("");
 
     private Spinner bContextToTrainSelection;
     private Button bStartTrainBtn;
     private Button bStopTrainBtn;
+    private Button bWriteFileBtn;
     private Button bExitBtn;
 
     private TextView bCountDownText;
@@ -39,7 +47,8 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private int dataCaptureFrequencyMS = 1000;
     private MyCountDown trainingCountdown = new MyCountDown(TrainingDurationMS, CountDownTickMS);
 
-    private SensorManager mSensorManager;
+    private static SensorManager mSensorManager;
+    private Sensor accelSensor;
     private boolean dataCaptureFlag = false;
 
 
@@ -57,7 +66,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         }
 
         // Initialize context to train selection
-        // To BE ADDED - database lookup for what context labels are in the context group provided.  For now, hardcode
+        // ***To BE ADDED - database lookup for what context labels are in the context group provided.  For now, hardcode
         // these values for testing basic functionality
         if (contextGroup.toLowerCase().equals("activity")) {
 
@@ -85,38 +94,176 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         bStopTrainBtn = (Button)findViewById(R.id.btnAbortTrain);
         bStopTrainBtn.setOnClickListener(this);
 
+        bWriteFileBtn = (Button)findViewById(R.id.btnWriteFile);
+        bWriteFileBtn.setOnClickListener(this);
+
         bExitBtn = (Button)findViewById(R.id.btnExitTrain);
         bExitBtn.setOnClickListener(this);
 
         bCountDownText = (TextView)findViewById(R.id.CountDownTxt);
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        // Look at features to use to determine which sensors to get data from
+        // ***To BE ADDED: Will need to call a function when database is implemented - for now hardcode:
+        accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        if (accelSensor != null) {
+            mSensorManager.registerListener(mySensorEventListener, accelSensor,
+                    SensorManager.SENSOR_DELAY_NORMAL);
+            Log.i("SENSOR_CREATE", "Registered Accel Sensor");
+
+        } else {
+            Log.e("SENSOR_CREATE", "could not find accel Sensor");
+            Toast.makeText(this, "Accel Sensor not found",
+                    Toast.LENGTH_LONG).show();
+            finish();
+        }
     }
+
+
+    private SensorEventListener mySensorEventListener = new SensorEventListener() {
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            // First check if data capture flag indicates that we should be capturing
+            float tempValue1;
+            float tempValue2;
+            float tempValue3;
+
+            if (dataCaptureFlag==true) {
+//                Log.i("SENSOR_ONCHANGE", "dataCaptureFlag=true");
+                // Save sensor data to buffer before writing to file
+                tempValue1=event.values[0];
+                tempValue2=event.values[1];
+                tempValue3=event.values[2];
+                dataToWrite.append(String.format("accelx:%f,accely:%f,accelz:%f,label:%s%n",tempValue1,tempValue2,tempValue3,bContextToTrainSelection.getSelectedItem().toString()));
+//                Log.i("SENSOR_ONCHANGE", "dataToWrite = "+dataToWrite.toString());
+            }
+
+
+        }
+    };
 
 
     @Override
     public void onClick(View v) {
         switch ( v.getId() ) {
             case R.id.btnStartTrain:
+                // Clear data buffer
+                if (dataToWrite.length()>0)
+                    dataToWrite.delete(0,dataToWrite.length());
 
-//                Toast.makeText(getApplicationContext(),
-//                    "Starting ",
-//                    Toast.LENGTH_LONG).show();
                 saveTrainingData();
+                trainingCountdown.start();
+                dataCaptureFlag = true;
                 break;
             case R.id.btnAbortTrain:
-                // Stop timer and clear temporary buffer
+                // Stop timer and clear countdown text
+                dataCaptureFlag = false;
                 trainingCountdown.cancel();
                 bCountDownText.setText("0");
+                CountTimeRemaining = 0;
                 break;
-            case R.id.btnExitTrain:
+            case R.id.btnWriteFile:
                 // Open and write contents of saved data to file
+                // First check that external storage is available
+                boolean mExternalStorageAvailable = false;
+                boolean mExternalStorageWriteable = false;
+                String SDCardState = Environment.getExternalStorageState();
 
-                //Finally, close training window
-                android.os.Process.killProcess(Process.myPid());
+                if (SDCardState.equals(Environment.MEDIA_MOUNTED)) {
+                    // We can read and write the media
+                    Log.i("WRITE_BTN", "external media mounted");
+                    mExternalStorageAvailable = mExternalStorageWriteable = true;
+                } else if (SDCardState.equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
+                    // We can only read the media
+                    Log.i("WRITE_BTN", "external media mounted but read only");
+                    mExternalStorageAvailable = true;
+                    mExternalStorageWriteable = false;
+                } else if (SDCardState.equals(Environment.MEDIA_NOFS)) {
+                    Log.i("WRITE_BTN","Error, the SDCard has format error");
+                    mExternalStorageAvailable = false;
+                } else if (SDCardState.equals(Environment.MEDIA_REMOVED)) {
+                    Log.i("WRITE_BTN","Error, the SDCard is removed");
+                    mExternalStorageAvailable = false;
+                } else if (SDCardState.equals(Environment.MEDIA_SHARED)) {
+                    Log.i("WRITE_BTN","Error, the SDCard is not mounted, used by USB");
+                    mExternalStorageAvailable = false;
+                } else if (SDCardState.equals(Environment.MEDIA_UNMOUNTABLE)) {
+                    Log.i("WRITE_BTN","Error, the SDCard could not be mounted");
+                    mExternalStorageAvailable = false;
+                } else if (SDCardState.equals(Environment.MEDIA_UNMOUNTED)) {
+                    Log.i("WRITE_BTN","Error, the SDCard is unmounted");
+                    mExternalStorageAvailable = false;
+                } else {
+                    // Something else is wrong. It may be one of many other states, but all we need
+                    //  to know is we can neither read nor write
+                    Log.i("WRITE_BTN", "external media mounted but read only");
+                    mExternalStorageAvailable = mExternalStorageWriteable = false;
+                }
+                // If external storage is not available or writeable, write to local phone instead
+                FileOutputStream outStream = null;
+                if (mExternalStorageAvailable && mExternalStorageWriteable) {
+                    Toast.makeText(getApplicationContext(),
+                            "Writeable External Media found",
+                            Toast.LENGTH_LONG).show();
+                    // ???TO MODIFY: use external data storage on mobile device for saving training data for now
+                    File sdCard = Environment.getExternalStorageDirectory();
+                    File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/" + contextGroup);
+                    dir.mkdirs();
+                    File file = new File(dir, trainingFileName);
+
+                    try {
+                        outStream = new FileOutputStream(file);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+
+                } else {
+                    Log.i("WRITE_BTN", "Writing to internal file:" + dataToWrite);
+
+                    try {
+                        outStream = openFileOutput(trainingFileName, MODE_WORLD_READABLE);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+                }
+                // Use trainingFileName, assume this is passed in
+                Toast.makeText(getApplicationContext(),
+                        "Writing to file: " + trainingFileName,
+                        Toast.LENGTH_LONG).show();
+
+                try {
+//                    outStream = new FileOutputStream(fileToWrite);
+                    outStream.write(dataToWrite.toString().getBytes());
+                    Log.i("WRITE_BTN", "wrote output file");
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } finally {
+                    if (outStream != null) {
+                        try {
+                            outStream.close();
+                            Log.i("WRITE_BTN", "closed output file");
+                        } catch (IOException e) {
+                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        }
+                    }
+                }
+
+            case R.id.btnExitTrain:
+                dataCaptureFlag = false;
+
+                //Finally, close training window and return to previous activity
+//                android.os.Process.killProcess(Process.myPid());
                 break;
         }
     }
+
 
     public class MyCountDown extends CountDownTimer{
         public MyCountDown(long millisInFuture, long countDownInterval) {
@@ -130,16 +277,15 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         @Override
         public void onFinish() {
             bCountDownText.setText("0");
+            dataCaptureFlag = false;
 //            bCountDownText.setText("done!");
         }
     }
 
     public void saveTrainingData() {
-        // Look at features to use to determine which sensors to get data from
-//        Sensor accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
         // kick off countdown timer, then wait a few seconds to allow for user to start activity before recording
-        trainingCountdown.start();
+//        trainingCountdown.start();
 
 //        try {
 //            Thread.sleep(TrainingBufferMS);
@@ -147,20 +293,30 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 //            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
 //        }
 
-        dataCaptureFlag = true;
         // Record data while countdown is still going based on data capture frequency
 //        while (CountTimeRemaining > TrainingBufferMS) {
-//            try {
-//                Thread.sleep(dataCaptureFrequencyMS);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//            }
-//            Toast.makeText(getApplicationContext(),
-//                    "Captured Data Point: ",
-//                    Toast.LENGTH_LONG).show();
+//            // wait until elapsed time over, or time is reset
+////            try {
+////                Thread.sleep(dataCaptureFrequencyMS);
+////            } catch (InterruptedException e) {
+////                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+////            }
+////            Toast.makeText(getApplicationContext(),
+////                    "Capturing Data: ",
+////                    Toast.LENGTH_LONG).show();
 //        }
         // stop recording 5 seconds before end of training time to minimize transient data recorded
-        dataCaptureFlag = false;
+
 
     }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (accelSensor != null) {
+            mSensorManager.unregisterListener(mySensorEventListener);
+        }
+    }
+
 }

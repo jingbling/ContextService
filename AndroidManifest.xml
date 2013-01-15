@@ -2,13 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="org.jingbling.ContextEngine">
     <uses-sdk android:minSdkVersion="10"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <application android:icon="@drawable/icon" android:label="@string/app_name">
         <service android:name=".ContextService">
             <intent-filter>
                 <action android:name="org.jingbling.ContextEngine.IContextService" />
             </intent-filter>
         </service>
-        <activity android:name="DataCollectionAct" />
+        <activity android:name="DataCollectionAct">
+        </activity>
     </application>
 
 </manifest>
