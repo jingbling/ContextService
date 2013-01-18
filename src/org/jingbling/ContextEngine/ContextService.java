@@ -65,7 +65,7 @@ public class ContextService extends Service {
 //
 //            //First just run libSVM to train data
 //        }
-        String returnValue = "nullString using classifier: "+classifierToUse + " and group:" +contextGroup;
+        String returnValue = "toBeImplemented using classifier: "+classifierToUse + " and group:" +contextGroup;
         return returnValue;
     }
 
