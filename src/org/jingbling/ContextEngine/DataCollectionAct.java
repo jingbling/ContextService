@@ -30,16 +30,20 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private String[] featuresToUse;
     private String contextGroup;
     private String[] contextLabels;
+    private String dir;
     private String trainingFileName;
+    private String modelFileName;
     private StringBuffer dataToWrite = new StringBuffer("");
 
     private Spinner bContextToTrainSelection;
     private Button bStartTrainBtn;
     private Button bStopTrainBtn;
     private Button bWriteFileBtn;
+    private Button bTrainClassifierBtn;
     private Button bExitBtn;
 
     private TextView bCountDownText;
+    private EditText bFilename;
     private long CountTimeRemaining = 30000;
     private int TrainingDurationMS = 30000;
     private int CountDownTickMS = 1000;
@@ -97,10 +101,14 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         bWriteFileBtn = (Button)findViewById(R.id.btnWriteFile);
         bWriteFileBtn.setOnClickListener(this);
 
+        bTrainClassifierBtn = (Button)findViewById(R.id.btnTrainData);
+        bTrainClassifierBtn.setOnClickListener(this);
+
         bExitBtn = (Button)findViewById(R.id.btnExitTrain);
         bExitBtn.setOnClickListener(this);
 
         bCountDownText = (TextView)findViewById(R.id.CountDownTxt);
+        bFilename  = (EditText)findViewById(R.id.trained_filename);
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         // Look at features to use to determine which sensors to get data from
@@ -139,7 +147,8 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 tempValue1=event.values[0];
                 tempValue2=event.values[1];
                 tempValue3=event.values[2];
-                dataToWrite.append(String.format("accelx:%f,accely:%f,accelz:%f,label:%s%n",tempValue1,tempValue2,tempValue3,bContextToTrainSelection.getSelectedItem().toString()));
+//                dataToWrite.append(String.format("accelx:%f,accely:%f,accelz:%f,label:%s%n",tempValue1,tempValue2,tempValue3,bContextToTrainSelection.getSelectedItem().toString()));
+                dataToWrite.append(String.format("%d 1:%f 2:%f 3:%f%n",bContextToTrainSelection.getSelectedItemPosition()-1,tempValue1,tempValue2,tempValue3));
 //                Log.i("SENSOR_ONCHANGE", "dataToWrite = "+dataToWrite.toString());
             }
 
@@ -156,7 +165,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 if (dataToWrite.length()>0)
                     dataToWrite.delete(0,dataToWrite.length());
 
-                saveTrainingData();
                 trainingCountdown.start();
                 dataCaptureFlag = true;
                 break;
@@ -168,6 +176,8 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 CountTimeRemaining = 0;
                 break;
             case R.id.btnWriteFile:
+                // grab training filename to write
+                trainingFileName = bFilename.getText().toString();
                 // Open and write contents of saved data to file
                 // First check that external storage is available
                 boolean mExternalStorageAvailable = false;
@@ -212,12 +222,14 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                             Toast.LENGTH_LONG).show();
                     // ???TO MODIFY: use external data storage on mobile device for saving training data for now
                     File sdCard = Environment.getExternalStorageDirectory();
-                    File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/" + contextGroup);
-                    dir.mkdirs();
-                    File file = new File(dir, trainingFileName);
+                    File testdir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/" + contextGroup);
+                    testdir.mkdirs();
+                    File file = new File(testdir, trainingFileName);
+                    dir = testdir.toString()+"/";
 
                     try {
-                        outStream = new FileOutputStream(file);
+                        // open file for append
+                        outStream = new FileOutputStream(file, true);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
@@ -226,10 +238,12 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                     Log.i("WRITE_BTN", "Writing to internal file:" + dataToWrite);
 
                     try {
-                        outStream = openFileOutput(trainingFileName, MODE_WORLD_READABLE);
+                        // open file for append
+                        outStream = openFileOutput(trainingFileName, MODE_APPEND);
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
+                    dir = "";
                 }
                 // Use trainingFileName, assume this is passed in
                 Toast.makeText(getApplicationContext(),
@@ -237,7 +251,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                         Toast.LENGTH_LONG).show();
 
                 try {
-//                    outStream = new FileOutputStream(fileToWrite);
+                    //                    outStream = new FileOutputStream(fileToWrite);
                     outStream.write(dataToWrite.toString().getBytes());
                     Log.i("WRITE_BTN", "wrote output file");
                 } catch (FileNotFoundException e) {
@@ -254,7 +268,25 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                         }
                     }
                 }
+                break;
 
+            case R.id.btnTrainData:
+                // Open a file explorer to choose training data file     ??? TO BE ADDED
+
+                //Instantiate class for training and saving libSVM model for now ???
+                LearningServer newServer = new LearningServer();
+                try {
+                    modelFileName = newServer.runSVMTraining(dir+trainingFileName);
+                    Toast.makeText(getApplicationContext(),
+                            "Wrote model: "+modelFileName,
+                            Toast.LENGTH_LONG).show();
+                    Log.i("TRAIN_BTN", "writing model: "+modelFileName);
+
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+
+                break;
             case R.id.btnExitTrain:
                 dataCaptureFlag = false;
 
@@ -280,34 +312,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
             dataCaptureFlag = false;
 //            bCountDownText.setText("done!");
         }
-    }
-
-    public void saveTrainingData() {
-
-        // kick off countdown timer, then wait a few seconds to allow for user to start activity before recording
-//        trainingCountdown.start();
-
-//        try {
-//            Thread.sleep(TrainingBufferMS);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//        }
-
-        // Record data while countdown is still going based on data capture frequency
-//        while (CountTimeRemaining > TrainingBufferMS) {
-//            // wait until elapsed time over, or time is reset
-////            try {
-////                Thread.sleep(dataCaptureFrequencyMS);
-////            } catch (InterruptedException e) {
-////                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-////            }
-////            Toast.makeText(getApplicationContext(),
-////                    "Capturing Data: ",
-////                    Toast.LENGTH_LONG).show();
-//        }
-        // stop recording 5 seconds before end of training time to minimize transient data recorded
-
-
     }
 
 

@@ -20,6 +20,22 @@
                 android:layout_height="wrap_content" />
     </LinearLayout>
 
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+        <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="enter filename:"
+                />
+        <EditText android:id="@+id/trained_filename"
+                  android:layout_weight="1"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:hint="enter filename .txt" />
+    </LinearLayout>
 
     <LinearLayout
             xmlns:android="http://schemas.android.com/apk/res/android"
@@ -63,8 +79,14 @@
         <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Press Exit to complete training and Write to save file:"
+                android:text="Press Exit to complete training, Train Classifier to generate classifier, and Write to save file:"
                 />
+    </LinearLayout>
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
         <Button
                 android:id="@+id/btnWriteFile"
                 android:layout_width="wrap_content"
@@ -74,12 +96,25 @@
                 />
 
         <Button
+                android:id="@+id/btnTrainData"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:text=" Train Classifier "
+                android:textSize="10dp"
+                />
+        <Button
                 android:id="@+id/btnExitTrain"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
                 android:text=" Exit Training "
                 android:textSize="10dp"
                 />
+    </LinearLayout>
+    <LinearLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
         <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
