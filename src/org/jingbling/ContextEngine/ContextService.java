@@ -1,9 +1,15 @@
 package org.jingbling.ContextEngine;
 
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
+import android.os.Message;
+import android.os.Messenger;
+import android.util.Log;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -14,17 +20,54 @@ import java.util.List;
  * Time: 11:44 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ContextService extends Service {
+public class ContextService extends IntentService {
 
-    public class ContextServiceImplement extends IContextService.Stub {
-        @Override
-        public String getContext(List<String> featuresToUse, String classifierToUse, String contextGroup) throws RemoteException {
-            return ContextService.this.classifyContext(featuresToUse, classifierToUse, contextGroup);
+   // Some variables for defining request
+    String contextGroup = new String();
+    String classifier = new String();
+    String features = new String();
+
+    public ContextService(){
+        super("ContextService");
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        //After launching service, first parse JSON from intent
+        Bundle inputExtras = intent.getExtras();
+        //??? Validate JSON against schema?
+
+        // Add JSON parser call here
+        try {
+            JSONObject jsonInput = new JSONObject(inputExtras.getString("JSONInput"));
+            contextGroup = jsonInput.getString("contextGroup");
+            classifier = jsonInput.getString("classifier");
+            JSONArray featuresArray = jsonInput.getJSONArray("features");
+            features = featuresArray.toString();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
-        @Override
-        public void gatherTrainingData(List<String> featuresToUse, String contextGroup, String filename) throws RemoteException {
-            ContextService.this.saveTrainingData(featuresToUse, contextGroup, filename);
+        String classifiedLabel = new String();
+
+        // For testing messenger, hard code classified label for now
+        classifiedLabel = "classifiedLabel_tobeadded, contextGroup: "+contextGroup+" classifier: "+ classifier + " features: "+features;
+
+        // At end of call, pass classified context back to calling application
+        if (inputExtras != null) {
+            Messenger messenger = (Messenger) inputExtras.get("MESSENGER");
+            Message msg = Message.obtain();
+            Bundle classifiedBundle = new Bundle();
+            classifiedBundle.putString("label",classifiedLabel);
+            msg.setData(classifiedBundle);
+            try {
+                messenger.send(msg);
+            } catch (android.os.RemoteException e1) {
+                Log.w(getClass().getName(), "Exception sending message", e1);
+            }
+
+
         }
     }
 
@@ -40,13 +83,15 @@ public class ContextService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-        return Service.BIND_AUTO_CREATE;
+        return super.onStartCommand(intent, flags, startId);
+//        return Service.BIND_AUTO_CREATE;
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
-        return new ContextServiceImplement();
+        // We don't provide binding, so return null
+        return null;
     }
 
     public String classifyContext(List<String> featuresToUse, String classifierToUse, String contextGroup) {
@@ -86,5 +131,6 @@ public class ContextService extends Service {
         String classifierObjFile = "null";
         return classifierObjFile;
     }
+
 
 }
