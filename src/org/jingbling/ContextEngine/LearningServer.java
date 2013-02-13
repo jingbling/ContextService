@@ -1,12 +1,11 @@
 package org.jingbling.ContextEngine;
 
 import android.os.Environment;
+import android.util.Log;
 import libsvm.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -23,8 +22,7 @@ import java.util.Vector;
  * the classifier object to be modified.
  */
 public class LearningServer {
-    private String classifierReturn = "none";
-//    public context_classifier_model classifier_model = new context_classifier_model();
+
     // SVM training variables
     private svm_parameter param;		// set internally
     private svm_problem prob;		// set by read_problem
@@ -114,10 +112,42 @@ public class LearningServer {
         return model_file_name;
     }
 
-    public String evaluateSVMModel (String modelFile, svm_model model) {
+    public String evaluateSVMModel (String featuresInputFile, String modelFile, HashMap labelsHashMap) throws IOException {
         // Function for evaluating SVM model
         String classifiedLabel="undefined";
-        return classifiedLabel;
+
+        int i=-5; // initialize to a value that should not be used
+
+        try
+        {
+            BufferedReader input = new BufferedReader(new FileReader(featuresInputFile));
+
+            svm_model model = svm.svm_load_model(modelFile);
+
+            i = (int)predict(input,model);
+            input.close();
+        }
+        catch(FileNotFoundException e)
+        {
+            Log.v("PREDICT", "File not found", e);
+        }
+        catch(ArrayIndexOutOfBoundsException e)
+        {
+            Log.v("PREDICT", "ArrayIndex Out of Bounds", e);
+        }
+
+        if (i==-5) {
+            // predict did not happen correctly
+            Log.v("PREDICT", "error with predicting");
+            return null;
+
+        } else {
+            // Use input hashmap to determine the appropriate label for the predicted integer
+            Log.v("PREDICT", "predicted index = "+i);
+            classifiedLabel = labelsHashMap.get(i).toString();
+
+            return classifiedLabel;
+        }
     }
 
     public String evaluateModel (String features, String PlaceholderForPMMLModel) {
@@ -380,5 +410,65 @@ public class LearningServer {
             new_num_nonzeros++;
         }
     }
+
+
+    private double predict(BufferedReader input, svm_model model) throws IOException
+    {
+        int correct = 0;
+        int total = 0;
+        double error = 0;
+        double sumv = 0, sumy = 0, sumvv = 0, sumyy = 0, sumvy = 0;
+
+        double predicted_v=-5;
+
+        int svm_type=svm.svm_get_svm_type(model);
+        int nr_class=svm.svm_get_nr_class(model);
+        double[] prob_estimates=null;
+
+        while(true)
+        {
+            String line = input.readLine();
+            if(line == null) break;
+
+            StringTokenizer st = new StringTokenizer(line," \t\n\r\f:");
+
+            double target = atof(st.nextToken());
+            int m = st.countTokens()/2;
+            svm_node[] x = new svm_node[m];
+            for(int j=0;j<m;j++)
+            {
+                x[j] = new svm_node();
+                x[j].index = atoi(st.nextToken());
+                x[j].value = atof(st.nextToken());
+            }
+
+            predicted_v = svm.svm_predict(model,x);
+
+            if(predicted_v == target)
+                ++correct;
+            error += (predicted_v-target)*(predicted_v-target);
+            sumv += predicted_v;
+            sumy += target;
+            sumvv += predicted_v*predicted_v;
+            sumyy += target*target;
+            sumvy += predicted_v*target;
+            ++total;
+        }
+        return predicted_v;
+//        if(svm_type == svm_parameter.EPSILON_SVR ||
+//                svm_type == svm_parameter.NU_SVR)
+//        {
+//            svm_predict.info("Mean squared error = "+error/total+" (regression)\n");
+//            svm_predict.info("Squared correlation coefficient = "+
+//                    ((total*sumvy-sumv*sumy)*(total*sumvy-sumv*sumy))/
+//                            ((total*sumvv-sumv*sumv)*(total*sumyy-sumy*sumy))+
+//                    " (regression)\n");
+//        }
+//        else
+//            svm_predict.info("Accuracy = "+(double)correct/total*100+
+//                    "% ("+correct+"/"+total+") (classification)\n");
+//        }
+    }
+
 
 }

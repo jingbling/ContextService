@@ -38,6 +38,7 @@
     <orderEntry type="jdk" jdkName="Android 4.1 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="libsvm" level="application" />
+    <orderEntry type="library" name="funf-0.3.1" level="project" />
   </component>
 </module>
 

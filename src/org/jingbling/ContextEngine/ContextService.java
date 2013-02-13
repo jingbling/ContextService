@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -54,7 +55,7 @@ public class ContextService extends IntentService {
 
         //After launching service, first parse JSON from intent
         Bundle inputExtras = intent.getExtras();
-        //??? Validate JSON against schema?
+        //todo Validate JSON against schema?
 
         // Add JSON parser call here
         try {
@@ -86,15 +87,17 @@ public class ContextService extends IntentService {
         // Not use lookup ID to determine if there is an existing model to run
         String classifiedModelFile = (String)classModel.get(lookupID);
         if (classifiedModelFile == null) {
-            // no classifier found, launch training mode
-            classifiedModelFile = "/mnt/sdcard/ContextServiceModels/"+classifier+"Classifier.model";
+            // no classifier found, launch training mode and create one
+            classifiedModelFile = "/mnt/sdcard/ContextServiceModels/"+classifier+"/Classifier.model";
 //            saveTrainingData(features, contextGroup, classifiedModelFile);
+            //todo Need to check if classifiedModelFile created, and if so, update hashmap
+
         }
 
+        // Run classifier model to determine label
         String classifiedLabel = new String();
 
-        // For testing messenger, hard code classified label for now
-        classifiedLabel = "classifiedLabel_tobeadded, contextGroup: "+contextGroup+" classifier: "+ classifier + " features: "+features;
+        classifiedLabel = classifyContext(features, classifiedModelFile, classifier);
 
         // At end of call, pass classified context back to calling application
         if (inputExtras != null) {
@@ -116,12 +119,12 @@ public class ContextService extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
-        android.os.Debug.waitForDebugger(); //??? TO BE REMOVED
+        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
     }
 
     @Override
     public void onDestroy() {
-        // Before exiting, write hashmap to file ???
+        //todo Before exiting, write hashmap to file
         super.onDestroy();
     }
 
@@ -214,25 +217,35 @@ public class ContextService extends IntentService {
         // Utility function to save internal data in form of JSON Object into a file
     }
 //
-//    public String classifyContext(List<String> featuresToUse, String classifierToUse, String contextGroup) {
-//        String classifierToRun;
-//        // check database for whether a suitable classifier already exists, and return serialized object filename if it does
-//        classifierToRun = lookupClassifier(featuresToUse, classifierToUse, contextGroup);
-////
-////        if (classifierToRun.equals("null")) {
-////            // null means object not found, run training data program to generate classifier register with database
-////            classifierToRun = "/"+classifierToUse.toLowerCase() + "/"+ contextGroup + Calendar.getInstance().getTime().toString();
-////            saveTrainingData(featuresToUse, classifierToUse, classifierToRun);
-////        }
-////        // Check on classifier to use, depending on type, run training locally or perform on remote machine
-////        if (classifierToUse.toLowerCase().equals("libsvm")) {
-////            //if libSVM chosen, run on machine
-////
-////            //First just run libSVM to train data
-////        }
-//        String returnValue = "toBeImplemented using classifier: "+classifierToUse + " and group:" +contextGroup;
-//        return returnValue;
-//    }
+    public String classifyContext(ArrayList<String> featuresToUse, String classifierModelFile, String classifierToUse) {
+        String returnValue = "toBeImplemented using features and group:" +contextGroup;
+        String inputVectorFilename = "/ContextServiceFiles/input/testinput.txt";
+        File dir = Environment.getExternalStorageDirectory();
+        File inputVectorFile = new File(dir, inputVectorFilename);
+
+        // First use features to Use to save file of input vector
+        //todo Hardcode for now by creating file
+
+        //todo Also need input hashtable for decoding labels, also hardcode for testing
+        HashMap labelHash = new HashMap();
+        labelHash.put(new Integer(-1),"walking");
+        labelHash.put(new Integer(0),"standing");
+        labelHash.put(new Integer(1),"running");
+
+        // Check on classifier to use, depending on type, run training locally or perform on remote machine
+        if (classifierToUse.toLowerCase().equals("libsvm")) {
+            //if libSVM chosen, run on machine
+            LearningServer classifierServer = new LearningServer();
+            try {
+                returnValue = classifierServer.evaluateSVMModel(inputVectorFile.toString(), classifierModelFile, labelHash);
+
+            } catch (IOException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+        }
+
+        return returnValue;
+    }
 
     public void saveTrainingData(String featuresToUse, String contextGroup, String filename) {
         // placeholder for launching activity that will guide user through recording labeled data
