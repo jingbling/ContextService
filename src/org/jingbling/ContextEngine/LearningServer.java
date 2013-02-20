@@ -1,10 +1,12 @@
 package org.jingbling.ContextEngine;
 
-import android.os.Environment;
 import android.util.Log;
 import libsvm.*;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -49,7 +51,8 @@ public class LearningServer {
 ////        ls.run(argv);
 //    }
 
-    public String runSVMTraining (String TrainingDataFile) throws IOException {
+
+    public void runSVMTraining (String TrainingDataFile, String outputModelFile) throws IOException {
 
         // LibSVM training is split up into a few steps:
         /*  1) converting to libSVM format - this is currently already done in DataCollectionAct.
@@ -98,18 +101,9 @@ public class LearningServer {
 
 //        do_cross_validation();
 
-
-
         svm_model trainedModel = svm.svm_train(prob,param);
         // write trained classifier to file
-        File sdCard = Environment.getExternalStorageDirectory();
-        File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceModels/LibSVM");
-        dir.mkdirs();
-        // Get input filename only
-        File tempFile = new File(TrainingDataFile);
-        String model_file_name = dir.toString()+tempFile.getName()+".model";
-        svm.svm_save_model(model_file_name,trainedModel);
-        return model_file_name;
+        svm.svm_save_model(outputModelFile,trainedModel);
     }
 
     public String evaluateSVMModel (String featuresInputFile, String modelFile, HashMap labelsHashMap) throws IOException {

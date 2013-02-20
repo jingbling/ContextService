@@ -39,6 +39,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="libsvm" level="application" />
     <orderEntry type="library" name="funf-0.3.1" level="project" />
+    <orderEntry type="library" name="commons-collections-3.2.1" level="application" />
   </component>
 </module>
 

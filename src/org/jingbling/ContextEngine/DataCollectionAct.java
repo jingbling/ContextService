@@ -1,22 +1,15 @@
 package org.jingbling.ContextEngine;
 
 import android.app.Activity;
-import android.content.Context;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Environment;
+import android.content.Intent;
+import android.os.*;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,13 +20,12 @@ import java.io.IOException;
  *  For now have a set sampling rate
  */
 public class DataCollectionAct extends Activity implements View.OnClickListener{
-    private String[] featuresToUse;
+    private ArrayList<String> featuresToUse;
     private String contextGroup;
-    private String[] contextLabels;
-    private String dir;
+    private ArrayList<String> contextLabels;
     private String trainingFileName;
     private String modelFileName;
-    private StringBuffer dataToWrite = new StringBuffer("");
+    private StringBuffer dataToWrite = new StringBuffer();
 
     private Spinner bContextToTrainSelection;
     private Button bStartTrainBtn;
@@ -42,42 +34,31 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private Button bTrainClassifierBtn;
     private Button bExitBtn;
 
+    private Intent dataCollectIntent;
+
     private TextView bCountDownText;
     private EditText bFilename;
-    private long CountTimeRemaining = 30000;
-    private int TrainingDurationMS = 30000;
+    private long CountTimeRemaining = 60000;
+    private int TrainingDurationMS = 60000;
     private int CountDownTickMS = 1000;
     private int TrainingBufferMS = 3000;
     private int dataCaptureFrequencyMS = 1000;
     private MyCountDown trainingCountdown = new MyCountDown(TrainingDurationMS, CountDownTickMS);
 
-    private static SensorManager mSensorManager;
-    private Sensor accelSensor;
     private boolean dataCaptureFlag = false;
 
-
+    private Bundle bundleFromService;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.data_collect);
 
-        // retrieve values
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            featuresToUse = extras.getStringArray("features");
-            contextGroup = extras.getString("context");
-            trainingFileName = extras.getString("filename");
-        }
-
-        // Initialize context to train selection
-        // ***To BE ADDED - database lookup for what context labels are in the context group provided.  For now, hardcode
-        // these values for testing basic functionality
-        if (contextGroup.toLowerCase().equals("activity")) {
-
-            contextLabels = new String[3];
-            contextLabels[0] = "standing";
-            contextLabels[1] = "running";
-            contextLabels[2] = "walking";
+        // retrieve values from service
+        bundleFromService = getIntent().getExtras();
+        if (bundleFromService != null) {
+            featuresToUse = bundleFromService.getStringArrayList("features");
+            contextLabels = bundleFromService.getStringArrayList("contextLabels");
+            contextGroup = bundleFromService.getString("context");
         }
 
         bContextToTrainSelection = (Spinner) findViewById(R.id.context_to_train);
@@ -97,6 +78,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
         bStopTrainBtn = (Button)findViewById(R.id.btnAbortTrain);
         bStopTrainBtn.setOnClickListener(this);
+        bStopTrainBtn.setClickable(false);
 
         bWriteFileBtn = (Button)findViewById(R.id.btnWriteFile);
         bWriteFileBtn.setOnClickListener(this);
@@ -110,51 +92,12 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         bCountDownText = (TextView)findViewById(R.id.CountDownTxt);
         bFilename  = (EditText)findViewById(R.id.trained_filename);
 
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        // Look at features to use to determine which sensors to get data from
-        // ***To BE ADDED: Will need to call a function when database is implemented - for now hardcode:
-        accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        if (accelSensor != null) {
-            mSensorManager.registerListener(mySensorEventListener, accelSensor,
-                    SensorManager.SENSOR_DELAY_NORMAL);
-            Log.i("SENSOR_CREATE", "Registered Accel Sensor");
+        // Setup data collection service intent
 
-        } else {
-            Log.e("SENSOR_CREATE", "could not find accel Sensor");
-            Toast.makeText(this, "Accel Sensor not found",
-                    Toast.LENGTH_LONG).show();
-            finish();
-        }
+        dataCollectIntent = new Intent(this, FeatureCollectionService.class);
     }
 
 
-    private SensorEventListener mySensorEventListener = new SensorEventListener() {
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        }
-
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            // First check if data capture flag indicates that we should be capturing
-            float tempValue1;
-            float tempValue2;
-            float tempValue3;
-
-            if (dataCaptureFlag==true) {
-//                Log.i("SENSOR_ONCHANGE", "dataCaptureFlag=true");
-                // Save sensor data to buffer before writing to file
-                tempValue1=event.values[0];
-                tempValue2=event.values[1];
-                tempValue3=event.values[2];
-//                dataToWrite.append(String.format("accelx:%f,accely:%f,accelz:%f,label:%s%n",tempValue1,tempValue2,tempValue3,bContextToTrainSelection.getSelectedItem().toString()));
-                dataToWrite.append(String.format("%d 1:%f 2:%f 3:%f%n",bContextToTrainSelection.getSelectedItemPosition()-1,tempValue1,tempValue2,tempValue3));
-//                Log.i("SENSOR_ONCHANGE", "dataToWrite = "+dataToWrite.toString());
-            }
-
-
-        }
-    };
 
 
     @Override
@@ -167,6 +110,27 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
                 trainingCountdown.start();
                 dataCaptureFlag = true;
+
+                // grab training filename to write
+                File sdCard = Environment.getExternalStorageDirectory();
+                File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
+                dir.mkdirs();
+                trainingFileName = dir.toString()+bFilename.getText().toString();
+
+                // put desired inputs into bundle
+                Bundle extras = new Bundle();
+                extras.putInt("labelID", bContextToTrainSelection.getSelectedItemPosition() - 1);
+                extras.putString("labelName", bContextToTrainSelection.getSelectedItem().toString());
+                extras.putStringArrayList("features",featuresToUse);
+                extras.putString("filename",trainingFileName);
+                extras.putString("action", "training");
+
+                // todo Use feature server to save desired features to specified file for training
+                dataCollectIntent.putExtras(extras);
+                startService(dataCollectIntent);
+
+                bStopTrainBtn.setClickable(true);
+
                 break;
             case R.id.btnAbortTrain:
                 // Stop timer and clear countdown text
@@ -174,109 +138,44 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 trainingCountdown.cancel();
                 bCountDownText.setText("0");
                 CountTimeRemaining = 0;
+                // stop feature collection server
+                stopService(dataCollectIntent);
+
+                bStopTrainBtn.setClickable(false);
                 break;
             case R.id.btnWriteFile:
-                // grab training filename to write
-                trainingFileName = bFilename.getText().toString();
-                // Open and write contents of saved data to file
-                // First check that external storage is available
-                boolean mExternalStorageAvailable = false;
-                boolean mExternalStorageWriteable = false;
-                String SDCardState = Environment.getExternalStorageState();
 
-                if (SDCardState.equals(Environment.MEDIA_MOUNTED)) {
-                    // We can read and write the media
-                    Log.i("WRITE_BTN", "external media mounted");
-                    mExternalStorageAvailable = mExternalStorageWriteable = true;
-                } else if (SDCardState.equals(Environment.MEDIA_MOUNTED_READ_ONLY)) {
-                    // We can only read the media
-                    Log.i("WRITE_BTN", "external media mounted but read only");
-                    mExternalStorageAvailable = true;
-                    mExternalStorageWriteable = false;
-                } else if (SDCardState.equals(Environment.MEDIA_NOFS)) {
-                    Log.i("WRITE_BTN","Error, the SDCard has format error");
-                    mExternalStorageAvailable = false;
-                } else if (SDCardState.equals(Environment.MEDIA_REMOVED)) {
-                    Log.i("WRITE_BTN","Error, the SDCard is removed");
-                    mExternalStorageAvailable = false;
-                } else if (SDCardState.equals(Environment.MEDIA_SHARED)) {
-                    Log.i("WRITE_BTN","Error, the SDCard is not mounted, used by USB");
-                    mExternalStorageAvailable = false;
-                } else if (SDCardState.equals(Environment.MEDIA_UNMOUNTABLE)) {
-                    Log.i("WRITE_BTN","Error, the SDCard could not be mounted");
-                    mExternalStorageAvailable = false;
-                } else if (SDCardState.equals(Environment.MEDIA_UNMOUNTED)) {
-                    Log.i("WRITE_BTN","Error, the SDCard is unmounted");
-                    mExternalStorageAvailable = false;
-                } else {
-                    // Something else is wrong. It may be one of many other states, but all we need
-                    //  to know is we can neither read nor write
-                    Log.i("WRITE_BTN", "external media mounted but read only");
-                    mExternalStorageAvailable = mExternalStorageWriteable = false;
-                }
-                // If external storage is not available or writeable, write to local phone instead
-                FileOutputStream outStream = null;
-                if (mExternalStorageAvailable && mExternalStorageWriteable) {
-                    Toast.makeText(getApplicationContext(),
-                            "Writeable External Media found",
-                            Toast.LENGTH_LONG).show();
-                    // ???TO MODIFY: use external data storage on mobile device for saving training data for now
-                    File sdCard = Environment.getExternalStorageDirectory();
-                    File testdir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/" + contextGroup);
-                    testdir.mkdirs();
-                    File file = new File(testdir, trainingFileName);
-                    dir = testdir.toString()+"/";
+                //todo move this section to collectionservice and replace with option of deleting data file
+//                // grab training filename to write
+//                sdCard = Environment.getExternalStorageDirectory();
+//                dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
+//                dir.mkdirs();
+//                trainingFileName = dir.toString()+bFilename.getText().toString();
 
-                    try {
-                        // open file for append
-                        outStream = new FileOutputStream(file, true);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                    }
+//                trainingFileName = bFilename.getText().toString();
+//                boolean result=false;
+//                result = writeFile(trainingFileName,dataToWrite);
+//
+//                if (result==false) {
+//                    // file write failed, set trainingFileName to null
+//                    trainingFileName=null;
+//                }
 
-                } else {
-                    Log.i("WRITE_BTN", "Writing to internal file:" + dataToWrite);
-
-                    try {
-                        // open file for append
-                        outStream = openFileOutput(trainingFileName, MODE_APPEND);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                    }
-                    dir = "";
-                }
-                // Use trainingFileName, assume this is passed in
-                Toast.makeText(getApplicationContext(),
-                        "Writing to file: " + trainingFileName,
-                        Toast.LENGTH_LONG).show();
-
-                try {
-                    //                    outStream = new FileOutputStream(fileToWrite);
-                    outStream.write(dataToWrite.toString().getBytes());
-                    Log.i("WRITE_BTN", "wrote output file");
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } finally {
-                    if (outStream != null) {
-                        try {
-                            outStream.close();
-                            Log.i("WRITE_BTN", "closed output file");
-                        } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                        }
-                    }
-                }
                 break;
 
             case R.id.btnTrainData:
+                //todo decide where to implement train data - for now train LibSVM only from this activity
                 // Open a file explorer to choose training data file     ??? TO BE ADDED
-
-                //Instantiate class for training and saving libSVM model for now ???
+//
+//                //Instantiate class for training and saving libSVM model for now ???
                 LearningServer newServer = new LearningServer();
                 try {
-                    modelFileName = newServer.runSVMTraining(dir+trainingFileName);
+                    // create a model file name in LibSVM directory, named same thing as trainingFileName
+                    sdCard = Environment.getExternalStorageDirectory();
+                    dir = new File(sdCard.getAbsolutePath() + "/ContextServiceModels/LibSVM/");
+                    dir.mkdirs();
+                    modelFileName =  dir.toString()+bFilename.getText().toString()+".model";
+                    newServer.runSVMTraining(trainingFileName, modelFileName);
                     Toast.makeText(getApplicationContext(),
                             "Wrote model: "+modelFileName,
                             Toast.LENGTH_LONG).show();
@@ -284,14 +183,34 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
                 } catch (IOException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } finally {
+                    // todo add messages back to service or save link to newly created model file?
                 }
 
                 break;
             case R.id.btnExitTrain:
                 dataCaptureFlag = false;
 
-                //Finally, close training window and return to previous activity
-//                android.os.Process.killProcess(Process.myPid());
+                // Add information into message bundle to return to calling service
+                // At end of call, pass classified context back to calling application
+                if (bundleFromService != null) {
+                    Messenger messenger = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
+                    Message msg = Message.obtain();
+                    Bundle returnBundle = new Bundle();
+                    // For reference, need to return table of index values to label as well
+                    returnBundle.putString("trainingFile", trainingFileName);
+                    returnBundle.putBoolean("trainingFinished", false);
+//                    returnBundle.putString("labelHash",classLabelHashmap);
+//                    returnBundle.putString("filename",classLabelHashmap);
+                    msg.setData(returnBundle);
+                    try {
+                        messenger.send(msg);
+                    } catch (android.os.RemoteException e1) {
+                        Log.w(getClass().getName(), "Exception sending message", e1);
+                    }
+                }
+                    //Finally, close training window and return to previous activity
+                super.finish();
                 break;
         }
     }
@@ -311,6 +230,8 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
             bCountDownText.setText("0");
             dataCaptureFlag = false;
 //            bCountDownText.setText("done!");
+            //todo - automatically stop collection service after timer elapses
+            stopService(dataCollectIntent);
         }
     }
 
@@ -318,9 +239,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (accelSensor != null) {
-            mSensorManager.unregisterListener(mySensorEventListener);
-        }
     }
 
 }

@@ -1,6 +1,8 @@
 package org.jingbling.ContextEngine;
 
+import android.app.ActivityManager;
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.os.*;
 import android.util.Log;
@@ -17,6 +19,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,7 +34,9 @@ public class ContextService extends IntentService {
     private String contextGroup = new String();
     private String classifier = new String();
     private ArrayList<String> features =new ArrayList<String>();
+    private ArrayList<String> contextLabels =new ArrayList<String>();
     private String JSONDataFile = "/ContextServiceFiles/data/DataStructure.JSON";
+    private String trainingFileName;
 
     // Create a hash map for each group of values that need to be looked up
     JSONArray allowableValues = new JSONArray();
@@ -39,7 +44,11 @@ public class ContextService extends IntentService {
     private HashMap featuresHashMap = new HashMap();
     private HashMap classifiersHashMap = new HashMap();
     private HashMap classModel = new HashMap();
+    private HashMap contextLabelsHashMap = new HashMap();
     private HashMap contextGroup2LabelsHashMap = new HashMap();
+
+    private Bundle outputBundle = new Bundle();
+    public boolean activityRunning = false;
 
     static final int LAUNCH_DATACOLLECT = 1;
 
@@ -71,12 +80,21 @@ public class ContextService extends IntentService {
             e.printStackTrace();
         }
 
+        // Using contextGroup, get list of labels associated
+        ArrayList<Integer> tempArray = (ArrayList<Integer>) contextGroup2LabelsHashMap.get(contextGroup);
+        for (int i=0;i<tempArray.size();i++) {
+            // save array values to labels
+            contextLabels.add((String) contextLabelsHashMap.get(tempArray.get(i)));
+        }
+
         // Next, calculate unique id from adding the sum of the IDs from the contextGroup, classifier, and features
         // Lookup in the hashmap the corresponding IDs for each, and then for an existing context model file
         // classifiers will have ID 99-100
         // contextGroup should have ID 100-9900
         // And features will have integers n=13-32, representing bit mapped values of 2^n
-        int lookupID = (Integer)ContextGroupHashMap.get(contextGroup);
+
+        int lookupID = (Integer) ContextGroupHashMap.get(contextGroup);
+
         lookupID = lookupID + (Integer)classifiersHashMap.get(classifier);
         // Loop through supplied features and add bitmapped value
         for (int i=0;i<features.size();i++) {
@@ -87,25 +105,63 @@ public class ContextService extends IntentService {
         // Not use lookup ID to determine if there is an existing model to run
         String classifiedModelFile = (String)classModel.get(lookupID);
         if (classifiedModelFile == null) {
-            // no classifier found, launch training mode and create one
-            classifiedModelFile = "/mnt/sdcard/ContextServiceModels/"+classifier+"/Classifier.model";
-//            saveTrainingData(features, contextGroup, classifiedModelFile);
-            //todo Need to check if classifiedModelFile created, and if so, update hashmap
+            //no classifier found, launch activity to train model
+            saveTrainingData(features, contextGroup, contextLabels);
+            // set activity running to pause service until return value given from data collection activity
+            activityRunning = true;
+            // While waiting for Training session to finish, suspend thread
+            while(activityRunning) {
+                try {
+                    HandlerThread.sleep(1000,1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            }
+            //todo automatically train data based on training file created
+            if (trainingFileName == null) {
+                // todo training file was not created correctly, return error
+                outputBundle.putInt("return", 1);
+                outputBundle.putString("error", "No training file found");
+                classifiedModelFile = null;
+            } else {
+                // train model and then save trained model
+                // todo create more generic model training function
+                LearningServer trainModel = new LearningServer();
+                File sdCard = Environment.getExternalStorageDirectory();
+                File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceModels/LibSVM");
+                dir.mkdirs();
+                classifiedModelFile = dir.toString()+"/ContextServiceModels/"+classifier+"/Classifier"+lookupID+".model";
+                Log.v("TrainModel", "writing model file: "+ classifiedModelFile);
+
+                try {
+                    trainModel.runSVMTraining(trainingFileName,classifiedModelFile);
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+
+                // classifiedModelFile created, update hashmap
+                classifiersHashMap.put(lookupID,classifiedModelFile);
+            }
+
 
         }
 
-        // Run classifier model to determine label
-        String classifiedLabel = new String();
+        if (classifiedModelFile != null) {
+            // Run classifier model to determine label
+            String classifiedLabel = new String();
 
-        classifiedLabel = classifyContext(features, classifiedModelFile, classifier);
+            classifiedLabel = classifyContext(features, classifiedModelFile, classifier, contextLabels);
+
+            // define output bundle
+            outputBundle.putInt("return", 0);
+            outputBundle.putString("label",classifiedLabel);
+        }
 
         // At end of call, pass classified context back to calling application
         if (inputExtras != null) {
             Messenger messenger = (Messenger) inputExtras.get("MESSENGER");
             Message msg = Message.obtain();
-            Bundle classifiedBundle = new Bundle();
-            classifiedBundle.putString("label",classifiedLabel);
-            msg.setData(classifiedBundle);
+            msg.setData(outputBundle);
             try {
                 messenger.send(msg);
             } catch (android.os.RemoteException e1) {
@@ -157,6 +213,27 @@ public class ContextService extends IntentService {
             for (int i=0;i<tempObject.length();i++) {
                 ContextGroupHashMap.put(tempObject.getJSONObject(i).getString("name"),tempObject.getJSONObject(i).getInt("id"));
             }
+
+            tempObject = inputJSON.getJSONArray("contexts");
+            for (int i=0;i<tempObject.length();i++) {
+                contextLabelsHashMap.put(tempObject.getJSONObject(i).getInt("id"),tempObject.getJSONObject(i).getString("name"));
+            }
+
+            tempObject = inputJSON.getJSONArray("contextGroupsContents");
+            for (int i=0;i<tempObject.length();i++) {
+                JSONArray contextList = new JSONArray();
+                contextList = tempObject.getJSONObject(i).getJSONArray("ids");
+                ArrayList<Integer> labelList = new ArrayList();
+
+                for (int icount=0;icount<(contextList.length());icount++) {
+                    //save array to an arraylist
+                    labelList.add(icount, contextList.getInt(icount));
+                }
+                Log.v("JSONParse","saving labelList: " + labelList);
+                contextGroup2LabelsHashMap.put(tempObject.getJSONObject(i).getString("name"),labelList.clone());
+                labelList.clear();
+            }
+
 
             tempObject = inputJSON.getJSONArray("classifiers");
             for (int i=0;i<tempObject.length();i++) {
@@ -214,10 +291,10 @@ public class ContextService extends IntentService {
     }
 
     public void writeJSONtoFile (JSONObject inputObject, String outputFileName) {
-        // Utility function to save internal data in form of JSON Object into a file
+        //todo Utility function to save internal data in form of JSON Object into a file
     }
 //
-    public String classifyContext(ArrayList<String> featuresToUse, String classifierModelFile, String classifierToUse) {
+    public String classifyContext(ArrayList<String> featuresToUse, String classifierModelFile, String classifierToUse, ArrayList<String> contextLabels) {
         String returnValue = "toBeImplemented using features and group:" +contextGroup;
         String inputVectorFilename = "/ContextServiceFiles/input/testinput.txt";
         File dir = Environment.getExternalStorageDirectory();
@@ -226,15 +303,15 @@ public class ContextService extends IntentService {
         // First use features to Use to save file of input vector
         //todo Hardcode for now by creating file
 
-        //todo Also need input hashtable for decoding labels, also hardcode for testing
-        HashMap labelHash = new HashMap();
-        labelHash.put(new Integer(-1),"walking");
-        labelHash.put(new Integer(0),"standing");
-        labelHash.put(new Integer(1),"running");
-
         // Check on classifier to use, depending on type, run training locally or perform on remote machine
         if (classifierToUse.toLowerCase().equals("libsvm")) {
             //if libSVM chosen, run on machine
+            //todo Also need input hashtable for decoding labels
+            // Need to revisit if this is the best way - for now create from input label array list
+            HashMap labelHash = new HashMap();
+            for (int i=0;i<contextLabels.size();i++) {
+                labelHash.put(i-1,contextLabels.get(i));
+            }
             LearningServer classifierServer = new LearningServer();
             try {
                 returnValue = classifierServer.evaluateSVMModel(inputVectorFile.toString(), classifierModelFile, labelHash);
@@ -247,27 +324,35 @@ public class ContextService extends IntentService {
         return returnValue;
     }
 
-    public void saveTrainingData(String featuresToUse, String contextGroup, String filename) {
-        // placeholder for launching activity that will guide user through recording labeled data
+    public void saveTrainingData(ArrayList featuresToUse, String contextGroup, ArrayList contextLabels) {
+        //launch activity that will guide user through recording labeled data
         Intent dialogIntent = new Intent(getBaseContext(), DataCollectionAct.class);
-        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //        dialogIntent.setAction(Intent.ACTION_VIEW);
 //        dialogIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         dialogIntent.putExtra("features", featuresToUse);
         dialogIntent.putExtra("context", contextGroup);
-        dialogIntent.putExtra("filename", filename);
+        dialogIntent.putExtra("contextLabels", contextLabels);
+
+        // Create a new Messenger for the communication back
+        Messenger messenger = new Messenger(serviceMsgHandler);
+        dialogIntent.putExtra("SERVICE_MESSENGER", messenger);
+
 //        startActivity(dialogIntent);
         getApplication().startActivity(dialogIntent);
     }
 
 
-    private Handler handler = new Handler() {
+    private Handler serviceMsgHandler = new Handler() {
         public void handleMessage(Message message) {
             Bundle output = message.getData();
             if (output != null) {
+                trainingFileName = output.getString("trainingFile");
+                activityRunning = output.getBoolean("trainingFinished");
                 Toast.makeText(getApplicationContext(),
-                        "Training file found: " + output.getString("trainFile"), Toast.LENGTH_LONG)
+                        "Training file received: " + trainingFileName, Toast.LENGTH_LONG)
                         .show();
+
             } else {
                 Toast.makeText(getApplicationContext(), "Classification failed",
                         Toast.LENGTH_LONG).show();
@@ -275,6 +360,18 @@ public class ContextService extends IntentService {
 
         };
     };
+
+    public boolean isActivityRunning() {
+        // function to check if another activity like the training activity is running
+        boolean ActivityRunState = false;
+        // Get list of running tasks
+        ActivityManager activityManager = (ActivityManager)this.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> Activities = activityManager.getRunningAppProcesses();
+        for (int i=0; i < Activities.size(); i++) {
+            Log.v("isActivityRunning", Activities.get(i).toString());
+        }
+        return ActivityRunState;
+    }
 //
 //    public static <T, E> T getKeyByValue(HashMap<T, E> map, E value) {
 //        // Used for reverse lookup of key to value

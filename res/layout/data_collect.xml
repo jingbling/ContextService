@@ -28,13 +28,13 @@
         <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="enter filename:"
+                android:text="enter trained data filename:"
                 />
         <EditText android:id="@+id/trained_filename"
                   android:layout_weight="1"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:hint="enter filename .txt" />
+                  android:hint="trainingDataBaseName" />
     </LinearLayout>
 
     <LinearLayout
@@ -59,14 +59,14 @@
                 android:id="@+id/btnStartTrain"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:text="   Start Training    "
+                android:text="   Start Collecting    "
                 android:textSize="10dp"
                 />
         <Button
                 android:id="@+id/btnAbortTrain"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:text=" Abort Training "
+                android:text=" Abort Collecting "
                 android:textSize="10dp"
                 />
 
@@ -79,7 +79,7 @@
         <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Press Exit to complete training, Train Classifier to generate classifier, and Write to save file:"
+                android:text="Press Exit to complete training, Train Classifier to generate classifier, and Write to save data file:"
                 />
     </LinearLayout>
     <LinearLayout
@@ -99,7 +99,7 @@
                 android:id="@+id/btnTrainData"
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:text=" Train Classifier "
+                android:text=" Train LibSVM Classifier "
                 android:textSize="10dp"
                 />
         <Button
