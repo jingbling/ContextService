@@ -32,12 +32,12 @@
     <file path="/IContextService.aidl" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356820265833" ignored="false" />
     <file path="/ContextService.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361627315809" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/src/com/example/ContextRequesterApp/ContextRequestAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361622085589" ignored="false" />
-    <file path="$PROJECT_DIR$/../ContextRequesterApp/res/layout/main.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359952333110" ignored="false" />
+    <file path="$PROJECT_DIR$/../ContextRequesterApp/res/layout/main.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361641728877" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/build.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356682650238" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/res/values/strings.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1358542437628" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/AndroidManifest.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918979895" ignored="false" />
     <file path="/strings.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1358542434016" ignored="false" />
-    <file path="/main.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1358542401967" ignored="false" />
+    <file path="/main.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361641721406" ignored="false" />
     <file path="/ContextRequestAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361614832240" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/gen/com/example/ContextRequesterApp/BuildConfig.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359919148499" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/gen/com/example/ContextRequesterApp/Manifest.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918996659" ignored="false" />
@@ -217,10 +217,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FeatureCollectionService.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="FeatureCollectionService.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="218" column="0" selection-start="9558" selection-end="9558" vertical-scroll-proportion="0.33248082">
+            <state line="218" column="0" selection-start="9558" selection-end="9558" vertical-scroll-proportion="-5.2">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -228,10 +228,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="data_collect.xml" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="data_collect.xml" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/res/layout/data_collect.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="89" column="8" selection-start="3645" selection-end="3913" vertical-scroll-proportion="-3.66">
+            <state line="93" column="48" selection-start="3851" selection-end="3851" vertical-scroll-proportion="1.5617284">
               <folding />
             </state>
           </provider>
@@ -774,11 +774,11 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3287879" sideWeight="0.6013629" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27651516" sideWeight="0.7666099" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.35227272" sideWeight="0.77512777" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3270869" sideWeight="0.6272727" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.67632025" order="6" side_tool="false" content_ui="tabs" />
@@ -895,16 +895,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/res/layout/data_collect.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="89" column="8" selection-start="3645" selection-end="3913" vertical-scroll-proportion="-3.66">
-          <folding />
-        </state>
-      </provider>
-      <provider editor-type-id="android-designer">
-        <state />
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/java/lang/reflect/Method.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="50" column="0" selection-start="2049" selection-end="2049" vertical-scroll-proportion="0.69822484">
@@ -983,11 +973,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="218" column="0" selection-start="9558" selection-end="9558" vertical-scroll-proportion="0.33248082">
+        <state line="218" column="0" selection-start="9558" selection-end="9558" vertical-scroll-proportion="-5.2">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/res/layout/data_collect.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="93" column="48" selection-start="3851" selection-end="3851" vertical-scroll-proportion="1.5617284">
+          <folding />
+        </state>
+      </provider>
+      <provider editor-type-id="android-designer">
+        <state />
       </provider>
     </entry>
   </component>
