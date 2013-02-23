@@ -3,10 +3,7 @@ package org.jingbling.ContextEngine;
 import android.util.Log;
 import libsvm.*;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -105,8 +102,12 @@ public class LearningServer {
         // write trained classifier to file
         svm.svm_save_model(outputModelFile,trainedModel);
     }
-
-    public String evaluateSVMModel (String featuresInputFile, String modelFile, HashMap labelsHashMap) throws IOException {
+    public svm_model loadSVMModel (String modelFile) throws IOException {
+        // only need to load model the first time it is being used, so make this a separate call.
+        svm_model model = svm.svm_load_model(modelFile);
+        return model;
+    }
+    public String evaluateSVMModel (String featuresInput, HashMap labelsHashMap, svm_model model) throws IOException {
         // Function for evaluating SVM model
         String classifiedLabel="undefined";
 
@@ -114,9 +115,9 @@ public class LearningServer {
 
         try
         {
-            BufferedReader input = new BufferedReader(new FileReader(featuresInputFile));
-
-            svm_model model = svm.svm_load_model(modelFile);
+            //BufferedReader input = new BufferedReader(new FileReader(featuresInputFile));
+            // Assuming String input is now the actual features string
+            BufferedReader input = new BufferedReader(new StringReader(featuresInput));
 
             i = (int)predict(input,model);
             input.close();

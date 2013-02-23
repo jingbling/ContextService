@@ -2,6 +2,7 @@ package org.jingbling.ContextEngine;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.*;
 import android.util.Log;
 import android.view.View;
@@ -45,13 +46,19 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private int dataCaptureFrequencyMS = 1000;
     private MyCountDown trainingCountdown = new MyCountDown(TrainingDurationMS, CountDownTickMS);
 
+    // for message back to service
+    private Messenger messengerToService;
+    private Message msgToService;
     private boolean dataCaptureFlag = false;
 
     private Bundle bundleFromService;
+    private Bundle returnBundle;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.data_collect);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // retrieve values from service
         bundleFromService = getIntent().getExtras();
@@ -59,6 +66,8 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
             featuresToUse = bundleFromService.getStringArrayList("features");
             contextLabels = bundleFromService.getStringArrayList("contextLabels");
             contextGroup = bundleFromService.getString("context");
+            messengerToService = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
+            msgToService = Message.obtain();
         }
 
         bContextToTrainSelection = (Spinner) findViewById(R.id.context_to_train);
@@ -78,10 +87,10 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
         bStopTrainBtn = (Button)findViewById(R.id.btnAbortTrain);
         bStopTrainBtn.setOnClickListener(this);
-        bStopTrainBtn.setClickable(false);
+        bStopTrainBtn.setEnabled(false);
 
-        bWriteFileBtn = (Button)findViewById(R.id.btnWriteFile);
-        bWriteFileBtn.setOnClickListener(this);
+//        bWriteFileBtn = (Button)findViewById(R.id.btnWriteFile);
+//        bWriteFileBtn.setOnClickListener(this);
 
         bTrainClassifierBtn = (Button)findViewById(R.id.btnTrainData);
         bTrainClassifierBtn.setOnClickListener(this);
@@ -115,7 +124,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 File sdCard = Environment.getExternalStorageDirectory();
                 File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
                 dir.mkdirs();
-                trainingFileName = dir.toString()+bFilename.getText().toString();
+                trainingFileName = dir.toString()+"/"+ bFilename.getText().toString();
 
                 // put desired inputs into bundle
                 Bundle extras = new Bundle();
@@ -129,7 +138,15 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 dataCollectIntent.putExtras(extras);
                 startService(dataCollectIntent);
 
-                bStopTrainBtn.setClickable(true);
+                bStopTrainBtn.setEnabled(true);
+
+                // Save training file information here - depending on what the last action is (training or data collecting)
+                // will determine which file (model or training file, respectively) will be returned to service
+
+                returnBundle = new Bundle();
+                returnBundle.putString("fileType", "trainingData");
+                returnBundle.putString("trainingFile", trainingFileName);
+//                    returnBundle.putBoolean("trainingFinished", false);
 
                 break;
             case R.id.btnAbortTrain:
@@ -141,32 +158,35 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 // stop feature collection server
                 stopService(dataCollectIntent);
 
-                bStopTrainBtn.setClickable(false);
+                bStopTrainBtn.setEnabled(false);
                 break;
-            case R.id.btnWriteFile:
-
-                //todo move this section to collectionservice and replace with option of deleting data file
-//                // grab training filename to write
-//                sdCard = Environment.getExternalStorageDirectory();
-//                dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
-//                dir.mkdirs();
-//                trainingFileName = dir.toString()+bFilename.getText().toString();
-
-//                trainingFileName = bFilename.getText().toString();
-//                boolean result=false;
-//                result = writeFile(trainingFileName,dataToWrite);
+//            case R.id.btnWriteFile:
 //
-//                if (result==false) {
-//                    // file write failed, set trainingFileName to null
-//                    trainingFileName=null;
-//                }
-
-                break;
+//                //todo move this section to collectionservice and replace with option of deleting data file
+////                // grab training filename to write
+////                sdCard = Environment.getExternalStorageDirectory();
+////                dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
+////                dir.mkdirs();
+////                trainingFileName = dir.toString()+bFilename.getText().toString();
+//
+////                trainingFileName = bFilename.getText().toString();
+////                boolean result=false;
+////                result = writeFile(trainingFileName,dataToWrite);
+////
+////                if (result==false) {
+////                    // file write failed, set trainingFileName to null
+////                    trainingFileName=null;
+////                }
+//
+//                break;
 
             case R.id.btnTrainData:
                 //todo decide where to implement train data - for now train LibSVM only from this activity
                 // Open a file explorer to choose training data file     ??? TO BE ADDED
 //
+                // stop feature collection server
+                stopService(dataCollectIntent);
+
 //                //Instantiate class for training and saving libSVM model for now ???
                 LearningServer newServer = new LearningServer();
                 try {
@@ -174,7 +194,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                     sdCard = Environment.getExternalStorageDirectory();
                     dir = new File(sdCard.getAbsolutePath() + "/ContextServiceModels/LibSVM/");
                     dir.mkdirs();
-                    modelFileName =  dir.toString()+bFilename.getText().toString()+".model";
+                    modelFileName =  dir.toString()+"/"+bFilename.getText().toString()+".model";
                     newServer.runSVMTraining(trainingFileName, modelFileName);
                     Toast.makeText(getApplicationContext(),
                             "Wrote model: "+modelFileName,
@@ -184,32 +204,29 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 } catch (IOException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 } finally {
-                    // todo add messages back to service or save link to newly created model file?
+                    // todo Send messages back to calling service with action "addModel" to indicate that we just
+                    // trained a LibSVM model with the given features / contextGroup
+                    returnBundle.putString("fileType", "model");
+                    returnBundle.putString("modelFileName",modelFileName);
+                    returnBundle.putString("contextGroup", contextGroup);
+                    returnBundle.putStringArrayList("features", featuresToUse);
+
+
                 }
 
                 break;
             case R.id.btnExitTrain:
                 dataCaptureFlag = false;
-
-                // Add information into message bundle to return to calling service
-                // At end of call, pass classified context back to calling application
-                if (bundleFromService != null) {
-                    Messenger messenger = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
-                    Message msg = Message.obtain();
-                    Bundle returnBundle = new Bundle();
-                    // For reference, need to return table of index values to label as well
-                    returnBundle.putString("trainingFile", trainingFileName);
-                    returnBundle.putBoolean("trainingFinished", false);
-//                    returnBundle.putString("labelHash",classLabelHashmap);
-//                    returnBundle.putString("filename",classLabelHashmap);
-                    msg.setData(returnBundle);
+                // Send message with latest file information to service if available
+                if (returnBundle != null) {
+                    msgToService.setData(returnBundle);
                     try {
-                        messenger.send(msg);
+                        messengerToService.send(msgToService);
                     } catch (android.os.RemoteException e1) {
-                        Log.w(getClass().getName(), "Exception sending message", e1);
+                        Log.w(getClass().getName(), "Exception sending message from DataCollectionAct", e1);
                     }
                 }
-                    //Finally, close training window and return to previous activity
+                //Finally, close training window and return to previous activity
                 super.finish();
                 break;
         }

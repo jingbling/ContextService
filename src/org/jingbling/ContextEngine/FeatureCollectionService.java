@@ -6,10 +6,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.IBinder;
+import android.os.*;
 import android.util.Log;
 
 import java.io.File;
@@ -37,7 +34,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
     private Sensor orientSensor;
     // more sensors to be added
 
-    private StringBuffer dataToWrite; //temp buffer to store data to be written to file or to classify
+    private StringBuffer dataToWrite=new StringBuffer(); //temp buffer to store data to be written to file or to classify
     private File dataCaptureFile;   // file for saving data for training
 
     private int intLabel; //for libSVM, use integer labels
@@ -53,9 +50,13 @@ public class FeatureCollectionService extends Service implements SensorEventList
     private static ArrayBlockingQueue<Double> orientDataBuffer;
 
     // for features calculation
-    private int accelFFTBuffSize= 128; //number of points to collect for FFT calculation
+    private int accelFFTBuffSize= 64; //number of points to collect for FFT calculation
     calculateFeatures saveDataTask=null;
 
+    // for classifying and sending message back to service
+
+    private Intent broadcastReturnIntent = new Intent("org.jingbling.ContextEngine.ContextService");
+    private Bundle returnBundle = new Bundle();
 
     @Override
     public void onCreate() {
@@ -67,6 +68,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
         saveDataTask = new calculateFeatures();
         super.onCreate();
+//        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
 
     }
 
@@ -80,20 +82,22 @@ public class FeatureCollectionService extends Service implements SensorEventList
         intLabel = inputExtras.getInt("labelID");
         stringLabel = inputExtras.getString("labelName");
         action = inputExtras.getString("action");
+//        messengerToService = (Messenger) inputExtras.get ("SERVICE_MESSENGER");
+//        msgToService = Message.obtain();
 
         // initialize sensor manager
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         //Depending on features desired, select which sensors to register
         for (int i=0;i<featureList.size();i++) {
-            if (featureList.get(i).toString().contains("(?i).*Accel.*")) {
+            if (featureList.get(i).toString().toLowerCase().contains("accel")) {
                 accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
                 if (accelSensor != null) {
                     mSensorManager.registerListener(this, accelSensor,
                             SensorManager.SENSOR_DELAY_FASTEST);
                 }
             }
-            if (featureList.get(i).toString().contains("(?i).*Orient.*")) {
+            if (featureList.get(i).toString().toLowerCase().contains("orient")) {
                 orientSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
                 if (orientSensor != null) {
                     mSensorManager.registerListener(this, orientSensor,
@@ -164,17 +168,34 @@ public class FeatureCollectionService extends Service implements SensorEventList
                             fft.fft(re,im);
 
                             // save fft values and labels to data to write
-                            dataToWrite.append(String.format("%d ",intLabel));
+                            // To avoid saving partial data, save to an intermediary loop before adding to dataToWrite
+                            StringBuffer tempBuffer = new StringBuffer();
+                            tempBuffer.append(String.format("%d ",intLabel));
                             for (int i=0;i<re.length;i++) {
                                 double mag = Math.sqrt(re[i]*re[i] + im[i]*im[i]);
-                                dataToWrite.append(String.format("%d:%f ",i+1,mag));
+                                tempBuffer.append(String.format("%d:%f ",i+1,mag));
                                 im[i]= .0; // clear imaginary field
                             }
-                            dataToWrite.append(String.format("%n"));
+                            tempBuffer.append(String.format("%n"));
 
-                            //todo if action is not to save item to file, send broadcast, otherwise append to buffer to write
-                            if (action == "classify") {
-                                // broadcast dataToWrite and clear buffer
+                            // Once tempBuffer is built, add to dataToWrite
+                            dataToWrite.append(tempBuffer);
+
+                            //clear tempBuffer
+                            if (tempBuffer.length()>0)
+                                tempBuffer.delete(0,tempBuffer.length());
+
+                            //if action is not to save item to file, send broadcast of data to service, otherwise append to buffer to write
+                            if (action.equals("classify")) {
+                                // todo broadcast dataToWrite and clear buffer
+                                returnBundle.putString("fileType","datatolabel");
+                                returnBundle.putString("inputData",dataToWrite.toString());
+                                // Send message with latest file information to service
+                                //                                msgToService.setData(returnBundle);
+                                broadcastReturnIntent = new Intent("org.jingbling.ContextEngine.ContextService");
+                                broadcastReturnIntent.putExtras(returnBundle);
+                                sendBroadcast(broadcastReturnIntent);
+//                                    messengerToService.send(msgToService);
 
                                 if (dataToWrite.length()>0)
                                     dataToWrite.delete(0,dataToWrite.length());
@@ -193,17 +214,21 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
         @Override
         protected void onCancelled() {
+            Log.d("AsyncTask", "Cancel detected");
             // check actions - if classifying, do not need to do anything but exit
-            if (action=="classify") {
+            if (action.equals("classify")) {
                 super.onCancelled();
                 return;
             }
 
             //Otherwise, training, so need to write data:
-            if (dataCaptureFile.exists()) {
-                // write data file
-                boolean writeResult = writeFile (dataCaptureFile.toString(),dataToWrite);
+            boolean writeResult = writeFile (dataCaptureFile.toString(),dataToWrite);
+            if (writeResult) {
+                // write successful, so clear dataToWrite for next round
+                if (dataToWrite.length()>0)
+                    dataToWrite.delete(0,dataToWrite.length());
             }
+
             super.onCancelled();
         }
     }

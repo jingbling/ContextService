@@ -10,6 +10,11 @@
                 <action android:name="org.jingbling.ContextEngine.ContextService" />
             </intent-filter>
         </service>
+        <service android:name=".FeatureCollectionService">
+            <intent-filter>
+                <action android:name="org.jingbling.ContextEngine.FeatureCollectionService" />
+            </intent-filter>
+        </service>
         <activity android:name="DataCollectionAct">
             <intent-filter>
                 <action android:name="org.jingbling.ContextEngine.DataCollectionAct" />

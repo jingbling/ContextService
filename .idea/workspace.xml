@@ -22,32 +22,34 @@
       </GlobalState>
     </option>
   </component>
+  <component name="AndroidLogFilters">
+    <option name="TOOL_WINDOW_LOG_LEVEL" value="DEBUG" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="7d13ddc7-711d-4260-9220-8570ecaf66ad" name="Default" comment="" />
     <ignored path="ContextService.iws" />
     <ignored path=".idea/workspace.xml" />
     <file path="/IContextService.aidl" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356820265833" ignored="false" />
-    <file path="/ContextService.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361037354147" ignored="false" />
-    <file path="$PROJECT_DIR$/../ContextRequesterApp/src/com/example/ContextRequesterApp/ContextRequestAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1360984948528" ignored="false" />
+    <file path="/ContextService.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361627315809" ignored="false" />
+    <file path="$PROJECT_DIR$/../ContextRequesterApp/src/com/example/ContextRequesterApp/ContextRequestAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361622085589" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/res/layout/main.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359952333110" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/build.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356682650238" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/res/values/strings.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1358542437628" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/AndroidManifest.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918979895" ignored="false" />
-    <file path="$USER_HOME$/AppData/Local/Temp/AIDLServiceConsumerAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356709315677" ignored="false" />
     <file path="/strings.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1358542434016" ignored="false" />
     <file path="/main.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1358542401967" ignored="false" />
-    <file path="/ContextRequestAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1360983961656" ignored="false" />
+    <file path="/ContextRequestAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361614832240" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/gen/com/example/ContextRequesterApp/BuildConfig.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359919148499" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/gen/com/example/ContextRequesterApp/Manifest.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918996659" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/gen/com/example/ContextRequesterApp/R.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918996659" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/src/com/example/ContextRequesterApp/IContextService.aidl" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356712111855" ignored="false" />
-    <file path="/fragment.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361175400135" ignored="false" />
-    <file path="/AndroidManifest.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1360983471927" ignored="false" />
+    <file path="/fragment.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361618087234" ignored="false" />
+    <file path="/AndroidManifest.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361625684606" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/src/org/jingbling/ContextEngine/IContextService.aidl" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356721860347" ignored="false" />
-    <file path="/LearningServer.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1360992790336" ignored="false" />
+    <file path="/LearningServer.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361626650388" ignored="false" />
     <file path="/context_classifier_model.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356751870899" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/.idea/workspace.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1360367134681" ignored="false" />
-    <file path="/DataCollectionAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361351197969" ignored="false" />
+    <file path="/DataCollectionAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361615797181" ignored="false" />
     <file path="/Dummy.txt" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918355600" ignored="false" />
     <file path="/DataCollect.xml" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356836221514" ignored="false" />
     <file path="$PROJECT_DIR$/../ContextRequesterApp/src/com/example/ContextRequesterApp/DataCollectionAct.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1356843210099" ignored="false" />
@@ -56,7 +58,7 @@
     <file path="$PROJECT_DIR$/../ContextRequesterApp/gen/org/jingbling/ContextEngine/ContextService.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1359918521781" ignored="false" />
     <file path="/FeatureServer.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361255585009" ignored="false" />
     <file path="/FFT.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361175376417" ignored="false" />
-    <file path="/FeatureCollectionService.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361351058812" ignored="false" />
+    <file path="/FeatureCollectionService.java" changelist="7d13ddc7-711d-4260-9220-8570ecaf66ad" time="1361624052970" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,7 +79,7 @@
   </component>
   <component name="DebuggerManager">
     <line_breakpoints default_suspend_policy="SuspendAll" default_condition_enabled="true">
-      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java" line="341" class="org.jingbling.ContextEngine.ContextService" package="org.jingbling.ContextEngine">
+      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/DataCollectionAct.java" line="197" class="org.jingbling.ContextEngine.DataCollectionAct" package="org.jingbling.ContextEngine">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -91,7 +93,7 @@
         <option name="CONDITION" value="" />
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java" line="155" class="org.jingbling.ContextEngine.ContextService" package="org.jingbling.ContextEngine">
+      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java" line="83" class="org.jingbling.ContextEngine.LearningServer" package="org.jingbling.ContextEngine">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -105,7 +107,49 @@
         <option name="CONDITION" value="" />
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java" line="369" class="org.jingbling.ContextEngine.ContextService" package="org.jingbling.ContextEngine">
+      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java" line="94" class="org.jingbling.ContextEngine.LearningServer" package="org.jingbling.ContextEngine">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/DataCollectionAct.java" line="209" class="org.jingbling.ContextEngine.DataCollectionAct" package="org.jingbling.ContextEngine">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/DataCollectionAct.java" line="198" class="org.jingbling.ContextEngine.DataCollectionAct" package="org.jingbling.ContextEngine">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint url="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java" line="474" class="org.jingbling.ContextEngine.ContextService$1" package="org.jingbling.ContextEngine">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -167,26 +211,19 @@
       <file leaf-file-name="LearningServer.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="54" column="22" selection-start="1585" selection-end="1591" vertical-scroll-proportion="-7.76">
+            <state line="121" column="0" selection-start="4103" selection-end="4103" vertical-scroll-proportion="-5.36">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FeatureCollectionService.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="FeatureCollectionService.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="6" column="41" selection-start="207" selection-end="207" vertical-scroll-proportion="-4.08">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FFT.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/FFT.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="12" column="19" selection-start="228" selection-end="228" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="218" column="0" selection-start="9558" selection-end="9558" vertical-scroll-proportion="0.33248082">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -194,7 +231,7 @@
       <file leaf-file-name="data_collect.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/res/layout/data_collect.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="36" column="52" selection-start="1569" selection-end="1569" vertical-scroll-proportion="-1.02">
+            <state line="89" column="8" selection-start="3645" selection-end="3913" vertical-scroll-proportion="-3.66">
               <folding />
             </state>
           </provider>
@@ -203,10 +240,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DataCollectionAct.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="DataCollectionAct.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/DataCollectionAct.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="233" column="43" selection-start="9858" selection-end="9858" vertical-scroll-proportion="5.291262">
+            <state line="137" column="33" selection-start="5263" selection-end="5269" vertical-scroll-proportion="-17.56">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -214,23 +251,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="String.class" pinned="false" current="false" current-in-tab="false">
-        <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/java/lang/String.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="9" column="11" selection-start="362" selection-end="362" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="ContextService.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="234" column="51" selection-start="9441" selection-end="9441" vertical-scroll-proportion="-8.04">
+            <state line="229" column="19" selection-start="10051" selection-end="10051" vertical-scroll-proportion="-12.68">
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#993#1001#0" expanded="true" />
-                <element signature="e#1063#1071#0" expanded="true" />
+                <element signature="e#1086#1094#0" expanded="true" />
+                <element signature="e#1156#1164#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -239,16 +267,7 @@
       <file leaf-file-name="AndroidManifest.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="6" column="71" selection-start="432" selection-end="432" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="IntentService.class" pinned="false" current="false" current-in-tab="false">
-        <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/app/IntentService.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+            <state line="4" column="77" selection-start="277" selection-end="277" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -271,7 +290,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/com/libSVM/java/svm_predict.java" />
         <option value="$PROJECT_DIR$/src/com/libSVM/java/libsvm/svm.java" />
         <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/context_classifier_model.java" />
         <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/IContextService.aidl" />
@@ -279,14 +297,15 @@
         <option value="$USER_HOME$/AppData/Local/Temp/AIDLSumService.java" />
         <option value="$USER_HOME$/AppData/Local/Temp/AIDLSumServiceAct.java" />
         <option value="$PROJECT_DIR$/../../MSENGROL/_2012Fall_E299/LibSVM3.14/libsvm-3.14/java/svm_train.java" />
-        <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java" />
-        <option value="$PROJECT_DIR$/AndroidManifest.xml" />
-        <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java" />
         <option value="$PROJECT_DIR$/src/FFT.java" />
-        <option value="$PROJECT_DIR$/res/layout/data_collect.xml" />
         <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureServer.java" />
-        <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java" />
+        <option value="$USER_HOME$/AppData/Local/Temp/AIDLServiceConsumerAct.java" />
+        <option value="$PROJECT_DIR$/res/layout/data_collect.xml" />
         <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/DataCollectionAct.java" />
+        <option value="$PROJECT_DIR$/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java" />
+        <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java" />
+        <option value="$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java" />
       </list>
     </option>
   </component>
@@ -755,26 +774,26 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3287879" sideWeight="0.6013629" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3287879" sideWeight="0.6013629" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27651516" sideWeight="0.7666099" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32864675" sideWeight="0.6272727" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.67632025" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.23339012" sideWeight="0.5356061" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3270869" sideWeight="0.6272727" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.67632025" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22487223" sideWeight="0.5356061" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31985942" sideWeight="0.50076807" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32367972" sideWeight="0.3212121" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32197616" sideWeight="0.68863636" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31985942" sideWeight="0.4938556" order="12" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28863636" sideWeight="0.29131174" order="3" side_tool="true" content_ui="tabs" x="1030" y="183" width="280" height="87" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.318569" sideWeight="0.4938556" order="12" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28863636" sideWeight="0.36115843" order="3" side_tool="true" content_ui="tabs" x="1030" y="183" width="280" height="87" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33410138" sideWeight="0.6731107" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.7666099" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28863636" sideWeight="0.6967632" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31985942" sideWeight="0.4689394" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28863636" sideWeight="0.4020443" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.318569" sideWeight="0.4689394" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32954547" sideWeight="0.6013629" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="5" side_tool="false" content_ui="combo" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -848,72 +867,9 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../MSENGROL/_2012Fall_E299/LibSVM3.14/libsvm-3.14/java/svm_predict.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="92" column="51" selection-start="2374" selection-end="2374" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../MSENGROL/_2012Fall_E299/LibSVM3.14/libsvm-3.14/java/libsvm/svm.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2380" column="76" selection-start="51916" selection-end="51916" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$PROJECT_DIR$/../../MSENGROL/_2012Fall_E299/FunfData/funf-0.3.1.jar!/edu/mit/media/funf/FFT.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="13" selection-start="161" selection-end="161" vertical-scroll-proportion="0.16504854">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$PROJECT_DIR$/../../MSENGROL/_2012Fall_E299/FunfData/funf-0.3.1.jar!/edu/mit/media/funf/probe/SensorProbe.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="22" selection-start="176" selection-end="176" vertical-scroll-proportion="-3.4">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/org/json/JSONArray.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="91" column="15" selection-start="3836" selection-end="3836" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/java/lang/String.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="11" selection-start="362" selection-end="362" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/app/IntentService.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/app/Service.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="17" column="41" selection-start="721" selection-end="721" vertical-scroll-proportion="0.23333333">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/content/ContextWrapper.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="99" column="16" selection-start="4878" selection-end="4878" vertical-scroll-proportion="0.23333333">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="71" selection-start="432" selection-end="432" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -925,16 +881,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java">
+    <entry file="file://$USER_HOME$/AppData/Local/Temp/AIDLServiceConsumerAct.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="54" column="22" selection-start="1585" selection-end="1591" vertical-scroll-proportion="-7.76">
+        <state line="12" column="43" selection-start="513" selection-end="513" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/content/res/Resources.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="124" column="0" selection-start="7520" selection-end="7520" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/res/layout/data_collect.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="52" selection-start="1569" selection-end="1569" vertical-scroll-proportion="-1.02">
+        <state line="89" column="8" selection-start="3645" selection-end="3913" vertical-scroll-proportion="-3.66">
           <folding />
         </state>
       </provider>
@@ -942,27 +905,85 @@
         <state />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java">
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/java/lang/reflect/Method.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="234" column="51" selection-start="9441" selection-end="9441" vertical-scroll-proportion="-8.04">
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#993#1001#0" expanded="true" />
-            <element signature="e#1063#1071#0" expanded="true" />
-          </folding>
+        <state line="50" column="0" selection-start="2049" selection-end="2049" vertical-scroll-proportion="0.69822484">
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java">
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/os/Looper.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="41" selection-start="207" selection-end="207" vertical-scroll-proportion="-4.08">
+        <state line="30" column="0" selection-start="1017" selection-end="1017" vertical-scroll-proportion="0.7094017">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/os/Handler.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="76" column="0" selection-start="3283" selection-end="3283" vertical-scroll-proportion="0.69822484">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/view/View.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="567" column="19" selection-start="24520" selection-end="24520" vertical-scroll-proportion="0.33333334">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/android/os/CountDownTimer.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="25" selection-start="445" selection-end="445" vertical-scroll-proportion="0.5062035">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files (x86)/Android/android-sdk/platforms/android-10/android.jar!/java/lang/Object.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="25" column="22" selection-start="730" selection-end="821" vertical-scroll-proportion="0.53598017">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/AndroidManifest.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="4" column="77" selection-start="277" selection-end="277" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/DataCollectionAct.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="233" column="43" selection-start="9858" selection-end="9858" vertical-scroll-proportion="5.291262">
+        <state line="137" column="33" selection-start="5263" selection-end="5269" vertical-scroll-proportion="-17.56">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/LearningServer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="121" column="0" selection-start="4103" selection-end="4103" vertical-scroll-proportion="-5.36">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/ContextService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="229" column="19" selection-start="10051" selection-end="10051" vertical-scroll-proportion="-12.68">
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1086#1094#0" expanded="true" />
+            <element signature="e#1156#1164#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/org/jingbling/ContextEngine/FeatureCollectionService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="218" column="0" selection-start="9558" selection-end="9558" vertical-scroll-proportion="0.33248082">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
