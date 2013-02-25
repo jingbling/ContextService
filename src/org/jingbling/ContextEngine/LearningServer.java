@@ -81,7 +81,8 @@ public class LearningServer {
 
 
         // Scale training data file
-        svm_scale(TrainingDataFile);
+        //todo determine if this is really needed, it adds a bit of computation time
+//        svm_scale(TrainingDataFile);
 
         try {
             read_problem(TrainingDataFile);

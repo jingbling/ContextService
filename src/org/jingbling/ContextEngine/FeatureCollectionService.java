@@ -27,7 +27,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class FeatureCollectionService extends Service implements SensorEventListener{
 
     private static SensorManager mSensorManager;
-    private ArrayList featureList;
+    private ArrayList<String> featureList = new ArrayList<String>();
+    private ArrayList<String> featuresAccepted = new ArrayList<String>();
     // define expected sensors to be used
     private Sensor accelSensor;
     private Sensor locationSensor;
@@ -61,12 +62,14 @@ public class FeatureCollectionService extends Service implements SensorEventList
     @Override
     public void onCreate() {
         //todo allocate buffer sizes - for now just do accelerometer data
-        accelSensorXBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
-        accelSensorYBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
-        accelSensorZBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
+//        accelSensorXBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
+//        accelSensorYBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
+//        accelSensorZBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
         accelSensorMagBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
 
         saveDataTask = new calculateFeatures();
+
+        featuresAccepted.add(0,"accelmag.fft");
         super.onCreate();
 //        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
 
@@ -123,9 +126,9 @@ public class FeatureCollectionService extends Service implements SensorEventList
             double tempValueX=sensorEvent.values[0];
             double tempValueY=sensorEvent.values[1];
             double tempValueZ=sensorEvent.values[2];
-            accelSensorXBuffer.offer(tempValueX);
-            accelSensorYBuffer.offer(tempValueY);
-            accelSensorZBuffer.offer(tempValueZ);
+//            accelSensorXBuffer.offer(tempValueX);
+//            accelSensorYBuffer.offer(tempValueY);
+//            accelSensorZBuffer.offer(tempValueZ);
 
             // also save magnitude for FFT
             double tempMag = Math.sqrt(tempValueX*tempValueX+tempValueY*tempValueY+tempValueZ*tempValueZ);
@@ -144,8 +147,8 @@ public class FeatureCollectionService extends Service implements SensorEventList
         protected Void doInBackground(Void... arg0) {
             // depending on the desired features, calculate and save to data buffer
             //Check each feature for desired values to save
-            if (featureList.contains("accel.FFT")) {
-                // calculate average of FFT
+            if (featureList.contains("accelmag.fft")) {
+                // calculate average of FFT of magnitude of accelerometers
                 // todo accept parameters for FFT calculation, for now just get it working
                 int buffSize = 0;
                 double[] dataBlock = new double[accelFFTBuffSize];
@@ -195,7 +198,6 @@ public class FeatureCollectionService extends Service implements SensorEventList
                                 broadcastReturnIntent = new Intent("org.jingbling.ContextEngine.ContextService");
                                 broadcastReturnIntent.putExtras(returnBundle);
                                 sendBroadcast(broadcastReturnIntent);
-//                                    messengerToService.send(msgToService);
 
                                 if (dataToWrite.length()>0)
                                     dataToWrite.delete(0,dataToWrite.length());
@@ -207,6 +209,10 @@ public class FeatureCollectionService extends Service implements SensorEventList
                     }
 
                 }
+            }  else {
+                // there is a feature that is not yet implemented or not recognized, log error and stop
+                Log.e("message","error with saving data, feature undefined: "+featureList.toString()+"%n allowed values: "+featuresAccepted);
+
             }
 
         return null;
@@ -243,10 +249,14 @@ public class FeatureCollectionService extends Service implements SensorEventList
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
+
     @Override
     public void onDestroy() {
         // cancel async task when leaving service
         saveDataTask.cancel(true);
+        // unregister listeners
+        mSensorManager.unregisterListener(this);
+
         super.onDestroy();
     }
 

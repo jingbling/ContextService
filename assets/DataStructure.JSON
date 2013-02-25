@@ -1,0 +1,45 @@
+{
+    "labels": [
+        {
+            "id": 1,
+            "name": "walking"
+        },
+        {
+            "id": 2,
+            "name": "standing"
+        },
+        {
+            "id": 3,
+            "name": "running"
+        }
+    ],
+    "features": [
+        {
+            "id": 13,
+            "name": "accelmag.fft"
+        }
+    ],
+    "classifierAlgorithm": [
+        {
+            "id": 0,
+            "name": "libsvm"
+        },
+        {
+            "id": 1,
+            "name": "decisiontree"
+        },
+        {
+            "id": 2,
+            "name": "gmm"
+        }
+    ],
+    "classifier": [
+        {
+            "id": 0,
+            "filename": "/mnt/sdcard/ContextServiceModels/libsvm/test.model",
+			"labels": ["walking","standing","running"],
+			"classifierAlgorithm": "none", 
+			"features": ["accelmag.fft"]
+        }
+    ]
+}

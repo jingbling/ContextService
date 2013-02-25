@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.*;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
  */
 public class DataCollectionAct extends Activity implements View.OnClickListener{
     private ArrayList<String> featuresToUse;
-    private String contextGroup;
+//    private String contextGroup;      todo no longer using contextGroup
     private ArrayList<String> contextLabels;
     private String trainingFileName;
     private String modelFileName;
@@ -36,6 +38,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private Button bExitBtn;
 
     private Intent dataCollectIntent;
+    private boolean serviceIsStarted = false;
 
     private TextView bCountDownText;
     private EditText bFilename;
@@ -49,8 +52,13 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     // for message back to service
     private Messenger messengerToService;
     private Message msgToService;
-    private boolean dataCaptureFlag = false;
 
+    // for filesaving
+    File sdCard;
+    File dir;
+
+    // put desired inputs into bundle
+    private Bundle extras = new Bundle();
     private Bundle bundleFromService;
     private Bundle returnBundle;
 
@@ -65,7 +73,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         if (bundleFromService != null) {
             featuresToUse = bundleFromService.getStringArrayList("features");
             contextLabels = bundleFromService.getStringArrayList("contextLabels");
-            contextGroup = bundleFromService.getString("context");
+//            contextGroup = bundleFromService.getString("context");
             messengerToService = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
             msgToService = Message.obtain();
         }
@@ -100,13 +108,43 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
         bCountDownText = (TextView)findViewById(R.id.CountDownTxt);
         bFilename  = (EditText)findViewById(R.id.trained_filename);
+        bFilename.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                //To change body of implemented methods use File | Settings | File Templates.
+
+                trainingFileName = dir.toString()+"/"+ bFilename.getText().toString();
+            }
+        });
 
         // Setup data collection service intent
 
         dataCollectIntent = new Intent(this, FeatureCollectionService.class);
+
+        // Setup other common data
+        // grab training filename to write
+        sdCard = Environment.getExternalStorageDirectory();
+        dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/inputs/");
+        dir.mkdirs();
+
+        extras.putInt("labelID", bContextToTrainSelection.getSelectedItemPosition() - 1);
+        extras.putString("labelName", bContextToTrainSelection.getSelectedItem().toString());
+        extras.putStringArrayList("features",featuresToUse);
+        extras.putString("filename",trainingFileName);
+        extras.putString("action", "training");
+        returnBundle = new Bundle();
+
     }
-
-
 
 
     @Override
@@ -118,21 +156,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                     dataToWrite.delete(0,dataToWrite.length());
 
                 trainingCountdown.start();
-                dataCaptureFlag = true;
-
-                // grab training filename to write
-                File sdCard = Environment.getExternalStorageDirectory();
-                File dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
-                dir.mkdirs();
-                trainingFileName = dir.toString()+"/"+ bFilename.getText().toString();
-
-                // put desired inputs into bundle
-                Bundle extras = new Bundle();
-                extras.putInt("labelID", bContextToTrainSelection.getSelectedItemPosition() - 1);
-                extras.putString("labelName", bContextToTrainSelection.getSelectedItem().toString());
-                extras.putStringArrayList("features",featuresToUse);
-                extras.putString("filename",trainingFileName);
-                extras.putString("action", "training");
 
                 // todo Use feature server to save desired features to specified file for training
                 dataCollectIntent.putExtras(extras);
@@ -143,7 +166,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 // Save training file information here - depending on what the last action is (training or data collecting)
                 // will determine which file (model or training file, respectively) will be returned to service
 
-                returnBundle = new Bundle();
                 returnBundle.putString("fileType", "trainingData");
                 returnBundle.putString("trainingFile", trainingFileName);
 //                    returnBundle.putBoolean("trainingFinished", false);
@@ -151,7 +173,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 break;
             case R.id.btnAbortTrain:
                 // Stop timer and clear countdown text
-                dataCaptureFlag = false;
                 trainingCountdown.cancel();
                 bCountDownText.setText("0");
                 CountTimeRemaining = 0;
@@ -160,63 +181,69 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
                 bStopTrainBtn.setEnabled(false);
                 break;
-//            case R.id.btnWriteFile:
-//
-//                //todo move this section to collectionservice and replace with option of deleting data file
-////                // grab training filename to write
-////                sdCard = Environment.getExternalStorageDirectory();
-////                dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/"+contextGroup+"/");
-////                dir.mkdirs();
-////                trainingFileName = dir.toString()+bFilename.getText().toString();
-//
-////                trainingFileName = bFilename.getText().toString();
-////                boolean result=false;
-////                result = writeFile(trainingFileName,dataToWrite);
-////
-////                if (result==false) {
-////                    // file write failed, set trainingFileName to null
-////                    trainingFileName=null;
-////                }
-//
-//                break;
 
             case R.id.btnTrainData:
-                //todo decide where to implement train data - for now train LibSVM only from this activity
-                // Open a file explorer to choose training data file     ??? TO BE ADDED
-//
-                // stop feature collection server
-                stopService(dataCollectIntent);
+                // todo add check that filename to train exists
+                File testfile = new File(trainingFileName);
 
-//                //Instantiate class for training and saving libSVM model for now ???
-                LearningServer newServer = new LearningServer();
-                try {
-                    // create a model file name in LibSVM directory, named same thing as trainingFileName
-                    sdCard = Environment.getExternalStorageDirectory();
-                    dir = new File(sdCard.getAbsolutePath() + "/ContextServiceModels/LibSVM/");
-                    dir.mkdirs();
-                    modelFileName =  dir.toString()+"/"+bFilename.getText().toString()+".model";
-                    newServer.runSVMTraining(trainingFileName, modelFileName);
+                if(testfile.exists()) {
+
+                    //todo decide where to implement train data - for now train LibSVM only from this activity
+                    // Open a file explorer to choose training data file     ??? TO BE ADDED
                     Toast.makeText(getApplicationContext(),
-                            "Wrote model: "+modelFileName,
+                            "Writing model file: "+modelFileName,
                             Toast.LENGTH_LONG).show();
-                    Log.i("TRAIN_BTN", "writing model: "+modelFileName);
+                    // stop feature collection server
+                    stopService(dataCollectIntent);
 
-                } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                } finally {
-                    // todo Send messages back to calling service with action "addModel" to indicate that we just
-                    // trained a LibSVM model with the given features / contextGroup
-                    returnBundle.putString("fileType", "model");
-                    returnBundle.putString("modelFileName",modelFileName);
-                    returnBundle.putString("contextGroup", contextGroup);
-                    returnBundle.putStringArrayList("features", featuresToUse);
+                    // Run following in separate thread
+                    Runnable r = new Runnable() {
+                        @Override
+                        public void run() {
+
+                            //                //Instantiate class for training and saving libSVM model for now ???
+                            LearningServer newServer = new LearningServer();
+                            try {
+                                // create a model file name in LibSVM directory, named same thing as trainingFileName
+                                File tempdir = new File(sdCard.getAbsolutePath() + "/ContextServiceModels/libsvm/");
+                                tempdir.mkdirs();
+                                modelFileName =  tempdir.toString()+"/"+bFilename.getText().toString()+".model";
 
 
+                                newServer.runSVMTraining(trainingFileName, modelFileName);
+
+                                Toast.makeText(getApplicationContext(),
+                                        "Wrote model: "+modelFileName,
+                                        Toast.LENGTH_LONG).show();
+                                Log.i("TRAIN_BTN", "wrote model: "+modelFileName);
+
+                            } catch (IOException e) {
+                                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            } finally {
+                                // todo Send messages back to calling service with action "addModel" to indicate that we just
+                                // trained a LibSVM model with the given features / contextGroup
+                                returnBundle.putString("fileType", "model");
+                                returnBundle.putString("algorithm","libsvm");
+                                returnBundle.putString("modelFileName",modelFileName);
+                                //                    returnBundle.putString("contextGroup", contextGroup);
+                                returnBundle.putStringArrayList("features", featuresToUse);
+                                returnBundle.putStringArrayList("labels",contextLabels);
+
+
+                            }
+                        }
+                    };
+                    r.run();
+
+                } else {
+                    // send error that training file not found
+                    Toast.makeText(getApplicationContext(),
+                            "Error, training file not found: "+trainingFileName,
+                            Toast.LENGTH_LONG).show();
                 }
 
                 break;
             case R.id.btnExitTrain:
-                dataCaptureFlag = false;
                 // Send message with latest file information to service if available
                 if (returnBundle != null) {
                     msgToService.setData(returnBundle);
@@ -245,7 +272,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         @Override
         public void onFinish() {
             bCountDownText.setText("0");
-            dataCaptureFlag = false;
 //            bCountDownText.setText("done!");
             //todo - automatically stop collection service after timer elapses
             stopService(dataCollectIntent);

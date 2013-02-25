@@ -13,13 +13,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -34,21 +30,30 @@ public class ContextService extends IntentService {
 
    // Some variables for defining request
     private String contextGroup = new String();
-    private String classifier = new String();
+    private String classifierAlg = new String();
     private ArrayList<String> features =new ArrayList<String>();
     private ArrayList<String> contextLabels =new ArrayList<String>();
-    private String JSONDataFile = "/ContextServiceFiles/data/DataStructure.JSON";
+    private String JSONDataFile="DataStructure.JSON";
+    private static JSONArray JSONLabels = new JSONArray();
+    private static JSONArray JSONFeatures = new JSONArray();
+    private static JSONArray JSONAlgorithms = new JSONArray();
+
+
     private String trainingFileName;
-    private String classifiedModelFile;
+    private ArrayList<String> classifiedModelFile;
+    private JSONArray existingJSONClassifiers = new JSONArray();
+
+    // Expected input labels
+    public static String ACTIONINPUT_KEY = "action";
+    public static String LABELSINPUT_KEY = "contextLabels";
+    public static String FEATURESINPUT_KEY = "features";
+    public static String ALGORITHM_KEY = "algorithm";
 
     // Create a hash map for each group of values that need to be looked up
-    JSONArray allowableValues = new JSONArray();
-    private HashMap ContextGroupHashMap = new HashMap();
     private HashMap featuresHashMap = new HashMap();
-    private HashMap classifiersHashMap = new HashMap();
+    private HashMap classifierAlgorithmHashMap = new HashMap();
     private HashMap classModel = new HashMap();
     private HashMap contextLabelsHashMap = new HashMap();
-    private HashMap contextGroup2LabelsHashMap = new HashMap();
 
     private Bundle outputBundle = new Bundle();
     public boolean activityRunning = false;
@@ -63,6 +68,7 @@ public class ContextService extends IntentService {
     MessageReceiver myReceiver = null;
     Boolean receiverRegistered = false;
     private svm_model currentSVMModel;
+    private ArrayList<Integer> currentlyExecutingModels = new ArrayList<Integer>();
 
     static final int LAUNCH_DATACOLLECT = 1;
 
@@ -73,65 +79,54 @@ public class ContextService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        // Initialize data arrays from a file
-        InitJSONtoHashMap(JSONDataFile);
+        // Initialize data arrays from assets file if there is no local file found
+        try {
+            InitJSONtoHashMap(JSONDataFile);
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
 
         //After launching service, first parse JSON from intent
         Bundle inputExtras = intent.getExtras();
-        //todo Validate JSON against schema?
 
-        // Add JSON parser call here
+        // instead of JSON input, just parse strings
+        action = inputExtras.getString(ACTIONINPUT_KEY);
+        contextLabels = inputExtras.getStringArrayList(LABELSINPUT_KEY);
+        features = inputExtras.getStringArrayList(FEATURESINPUT_KEY);
+        classifierAlg = inputExtras.getString(ALGORITHM_KEY);
+
+        // if action is to initialize with allowable values, do this and return message.
+        if (action.toLowerCase().equals("init")) {
+            Messenger messenger = (Messenger) inputExtras.get("MESSENGER");
+            // return allowable labels and features
+            outputBundle.putInt("return",2);
+            // query allowable values and send to requesting app
+            String[] tempArray;
+            outputBundle.putStringArray("allowedFeatures",(String[]) featuresHashMap.keySet().toArray(new String[featuresHashMap.size()]));
+            outputBundle.putStringArray("allowedLabels",(String[])contextLabelsHashMap.values().toArray(new String[contextLabelsHashMap.size()]));
+            tempArray = (String[])classifierAlgorithmHashMap.keySet().toArray(new String[classifierAlgorithmHashMap.size()]);
+            outputBundle.putStringArray("allowedAlgorithms", tempArray.clone());
+            outputBundle.putString("message","initialization variables sent");
+
+            // send message then return
+            sendMessageToClient(messenger, outputBundle);
+            return;
+        }
+
+        // Check for existing model
         try {
-            JSONObject jsonInput = new JSONObject(inputExtras.getString("JSONInput"));
-            contextGroup = jsonInput.getString("contextGroup");
-            classifier = jsonInput.getString("classifier");
-            JSONArray featuresArray = jsonInput.getJSONArray("features");
-            for (int i=0;i<featuresArray.length();i++) {
-                features.add(i, featuresArray.get(i).toString());
-            }
-
+            classifiedModelFile = findClassifierMatch(features, classifierAlg, contextLabels, existingJSONClassifiers);
         } catch (JSONException e) {
-            e.printStackTrace();
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        // Using contextGroup, get list of labels associated
-        ArrayList<Integer> tempArray = (ArrayList<Integer>) contextGroup2LabelsHashMap.get(contextGroup);
-        for (int i=0;i<tempArray.size();i++) {
-            // save array values to labels
-            contextLabels.add((String) contextLabelsHashMap.get(tempArray.get(i)));
-        }
-
-        // Next, calculate unique id from adding the sum of the IDs from the contextGroup, classifier, and features
-        // Lookup in the hashmap the corresponding IDs for each, and then for an existing context model file
-        // classifiers will have ID 99-100
-        // contextGroup should have ID 100-9900
-        // And features will have integers n=13-32, representing bit mapped values of 2^n
-//
-//        int lookupID = (Integer) ContextGroupHashMap.get(contextGroup);
-//
-//        lookupID = lookupID + (Integer)classifiersHashMap.get(classifier);
-//        // Loop through supplied features and add bitmapped value
-//        for (int i=0;i<features.size();i++) {
-//            int tempValue = (Integer)featuresHashMap.get(features.get(i));
-//            lookupID = (int) (lookupID + Math.pow(2, tempValue));
-//        }
-        // todo don't mess with lookupID at the moment, use bogus number to test training
-        int lookupID = 0;
-
-        // Not use lookup ID to determine if there is an existing model to run
-        classifiedModelFile = (String)classModel.get(lookupID);
-
-        //todo for now test with known model
-        classifiedModelFile = "/mnt/sdcard/ContextServiceModels/LibSVM/test.model";
-
-        action = inputExtras.getString("action");
-        if (action.equals("classify")) {
+        if (action.toLowerCase().equals("classify")) {
             if (classifiedModelFile == null) {
 
                 // Do not automatically launch activity - instead, return a message telling application to request training activity
                 // define output bundle
                 outputBundle.putInt("return", 1);
-                outputBundle.putString("label","run training");
+                outputBundle.putString("message","No classifier found, please run training");
 
 
             }
@@ -167,11 +162,12 @@ public class ContextService extends IntentService {
                 // First set up model before running in a loop
                 LearningServer classifierServer = new LearningServer();
                 svm_model currentModel=null;
-                if (classifier.toLowerCase().equals("libsvm")) {
+                if (classifierAlg.toLowerCase().equals("libsvm")) {
                     // load model from file
 
                     try {
-                        currentModel = classifierServer.loadSVMModel(classifiedModelFile);
+                        // todo for now only train first match
+                        currentModel = classifierServer.loadSVMModel(classifiedModelFile.get(0));
                     } catch (IOException e) {
                         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
@@ -187,7 +183,7 @@ public class ContextService extends IntentService {
                     String classifiedLabel = new String();
                     // first load model
 
-                    if (classifier.toLowerCase().equals("libsvm")) {
+                    if (classifierAlg.toLowerCase().equals("libsvm")) {
 
                         // Only run classifier once every desired period
 
@@ -250,6 +246,11 @@ public class ContextService extends IntentService {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
+
+            // if training success (model file not null), return message
+            outputBundle.putInt("return", 1);
+            outputBundle.putString("message","left training activity");
+
 //            //todo automatically train data based on training file created
 //            if (trainingFileName == null) {
 //                // todo training file was not created correctly, return error
@@ -273,7 +274,7 @@ public class ContextService extends IntentService {
 //                }
 //
 //                // classifiedModelFile created, update hashmap
-//                classifiersHashMap.put(lookupID,classifiedModelFile);
+//                classifierAlgorithmHashMap.put(lookupID,classifiedModelFile);
 //            }
 
         }
@@ -320,7 +321,55 @@ public class ContextService extends IntentService {
         return null;
     }
 
-    public void InitJSONtoHashMap (String inputJSONFile) {
+    public ArrayList<String> findClassifierMatch (ArrayList<String> features, String classifierAlgorithm, ArrayList<String> labels, JSONArray inputJSONArray) throws JSONException {
+        // This function takes in requested inputs and finds a matching classifier to run
+        // If a matching classfier(s) is(are) found, they will be returned in a string arraylist.  Otherwise a null ArrayList is returned
+
+        // First, parse JSON Array for desired inputs
+        String FEATURES_KEY = "features";
+        String LABELS_KEY = "labels";
+        String ALG_KEY = "classifierAlgorithm";
+        String FILE_KEY = "filename";
+        String ID_KEY = "id";
+        int numMatches = 0;
+        ArrayList<String> matchOutput = null;
+
+        // Cycle through each array entry and look for exact match of all inputs
+        for (int i = 0; i<inputJSONArray.length(); i++) {
+            if (classifierAlgorithm.toLowerCase().equals(inputJSONArray.getJSONObject(i).getString(ALG_KEY).toLowerCase())) {
+                // now check that the sorted labels match between input and classifier object
+                Collections.sort(labels);
+                // Parse JSONArray into an ArrayList
+                JSONArray tempArray = inputJSONArray.getJSONObject(i).getJSONArray(LABELS_KEY);
+                ArrayList<String> tempArrayList = new ArrayList<String>();
+                for (int j=0; j<tempArray.length(); j++) {
+                    tempArrayList.add(j,tempArray.get(j).toString().toLowerCase());
+                }
+                Collections.sort(tempArrayList);
+
+                if (labels.equals(tempArrayList)) {
+                    // Continue in same fashion to check the features array
+                    // now check that the sorted labels match between input and classifier object
+                    Collections.sort(features);
+                    // Parse JSONArray into an ArrayList
+                    JSONArray tempArray2 = inputJSONArray.getJSONObject(i).getJSONArray(FEATURES_KEY);
+                    ArrayList<String> tempArrayList2 = new ArrayList<String>();
+                    for (int count=0; count<tempArray2.length(); count++) {
+                        tempArrayList2.add(count,tempArray2.get(count).toString().toLowerCase());
+                    }
+                    Collections.sort(tempArrayList2);
+                    if (features.equals(tempArrayList2)) {
+                        // all aspects match, add filename to output arraylist and increment counter
+                        matchOutput = new ArrayList<String>();
+                        matchOutput.add(numMatches,inputJSONArray.getJSONObject(i).getString(FILE_KEY));
+                        numMatches++;
+                    }
+                }
+            }
+        }
+        return matchOutput;
+    }
+    public void InitJSONtoHashMap (String inputJSONFile) throws IOException {
 
         JSONObject inputJSON = null;
         try {
@@ -329,83 +378,79 @@ public class ContextService extends IntentService {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
-        JSONArray tempObject = new JSONArray();
-        // Parse JSON to establish data mappings for lookup
+        // Parse JSON to establish data mappings for lookups
         try {
-            tempObject = inputJSON.getJSONArray("contextGroups");
-            for (int i=0;i<tempObject.length();i++) {
-                ContextGroupHashMap.put(tempObject.getJSONObject(i).getString("name"),tempObject.getJSONObject(i).getInt("id"));
+
+            JSONLabels = inputJSON.getJSONArray("labels");
+            for (int i=0;i<JSONLabels.length();i++) {
+                contextLabelsHashMap.put(JSONLabels.getJSONObject(i).getInt("id"),JSONLabels.getJSONObject(i).getString("name"));
             }
 
-            tempObject = inputJSON.getJSONArray("contexts");
-            for (int i=0;i<tempObject.length();i++) {
-                contextLabelsHashMap.put(tempObject.getJSONObject(i).getInt("id"),tempObject.getJSONObject(i).getString("name"));
-            }
-
-            tempObject = inputJSON.getJSONArray("contextGroupsContents");
-            for (int i=0;i<tempObject.length();i++) {
-                JSONArray contextList = new JSONArray();
-                contextList = tempObject.getJSONObject(i).getJSONArray("ids");
-                ArrayList<Integer> labelList = new ArrayList();
-
-                for (int icount=0;icount<(contextList.length());icount++) {
-                    //save array to an arraylist
-                    labelList.add(icount, contextList.getInt(icount));
-                }
-                Log.v("JSONParse","saving labelList: " + labelList);
-                contextGroup2LabelsHashMap.put(tempObject.getJSONObject(i).getString("name"),labelList.clone());
-                labelList.clear();
-            }
-
-
-            tempObject = inputJSON.getJSONArray("classifiers");
-            for (int i=0;i<tempObject.length();i++) {
+            JSONAlgorithms = inputJSON.getJSONArray("classifierAlgorithm");
+            for (int i=0;i<JSONAlgorithms.length();i++) {
                 // Reverse the order for classifier Models, as lookup will be usually be performed with id
-                classifiersHashMap.put(tempObject.getJSONObject(i).getString("name"),tempObject.getJSONObject(i).getInt("id"));
+                classifierAlgorithmHashMap.put(JSONAlgorithms.getJSONObject(i).getString("name"), JSONAlgorithms.getJSONObject(i).getInt("id"));
             }
 
-            tempObject = inputJSON.getJSONArray("features");
-            for (int i=0;i<tempObject.length();i++) {
-                featuresHashMap.put(tempObject.getJSONObject(i).getString("name"),tempObject.getJSONObject(i).getInt("id"));
+            JSONFeatures = inputJSON.getJSONArray("features");
+            for (int i=0;i<JSONFeatures.length();i++) {
+                featuresHashMap.put(JSONFeatures.getJSONObject(i).getString("name"),JSONFeatures.getJSONObject(i).getInt("id"));
             }
 
-            tempObject = inputJSON.getJSONArray("classifierModels");
-            for (int i=0;i<tempObject.length();i++) {
-                // Reverse the order for classifier Models, as lookup will be usually be performed with id
-                classModel.put(tempObject.getJSONObject(i).getInt("id"),tempObject.getJSONObject(i).getString("name"));
-            }
+            existingJSONClassifiers = inputJSON.getJSONArray("classifier");
+//
+//            tempObject = inputJSON.getJSONArray("classifier");
+//            for (int i=0;i<tempObject.length();i++) {
+//                // Reverse the order for classifier Models, as lookup will be usually be performed with id
+//                classModel.put(tempObject.getJSONObject(i).getInt("id"),tempObject.getJSONObject(i));
+//            }
 
         } catch (JSONException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-
-
     }
 
-    public JSONObject parseJSONFromFile (String inputJSONFile) throws JSONException {
+    public JSONObject parseJSONFromFile (String inputJSONFile) throws JSONException, IOException {
 
         String jString = null;
+        InputStream istream = null;
         // Parse expected elements from JSON file into a JSON Object
         try {
-
-            File dir = Environment.getExternalStorageDirectory();
-            File inputFile = new File(dir, inputJSONFile);
-            FileInputStream istream = new FileInputStream(inputFile);
+//          // first try opening private file - if doesn't exist, open default assets file
+            File checkfile = new File(getBaseContext().getFilesDir()+"/"+JSONDataFile);
+            boolean exists = checkfile.exists();
             try {
-                FileChannel fc = istream.getChannel();
-                MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-                /* Instead of using default, pass in a decoder. */
-                jString = Charset.defaultCharset().decode(bb).toString();
-            }
-            finally {
-                istream.close();
+                istream = new BufferedInputStream(new FileInputStream(checkfile));
+                Log.d("JSON_Writer", "internal file found and being used");
+
+            } catch (IOException e) {
+                Log.d("JSON_Writer", "No internal file found, opening read-only JSONDataFile");
+                istream = getResources().getAssets().open(inputJSONFile);
             }
 
-        } catch (Exception e) {e.printStackTrace();}
+            Writer writer = new StringWriter();
+            char[] buffer = new char[2048];
+
+            Reader reader = new BufferedReader(new InputStreamReader(istream,
+                    "UTF-8"));
+            int n;
+            while ((n = reader.read(buffer)) != -1) {
+                writer.write(buffer, 0, n);
+            }
+
+            jString = writer.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (istream != null)
+                istream.close();
+        }
 
         if (jString != null) {
 
             JSONObject outputJSONObj = new JSONObject(jString);
+            Log.d("parseJSONFromFile","SUCCESS parsing JSON from file");
             return outputJSONObj;
         } else {
             Log.w("parseJSONFromFile","ERROR parsing JSONObject from file");
@@ -413,8 +458,29 @@ public class ContextService extends IntentService {
         }
     }
 
-    public void writeJSONtoFile (JSONObject inputObject, String outputFileName) {
+    public void writeJSONtoFile () {
         //todo Utility function to save internal data in form of JSON Object into a file
+        // Save current state of features to internally kept JSON file
+        JSONObject newJSONData = new JSONObject();
+        try {
+            newJSONData.put("features", JSONFeatures);
+            newJSONData.put("labels", JSONLabels);
+            newJSONData.put("classifierAlgorithm", JSONAlgorithms);
+            newJSONData.put("classifier", existingJSONClassifiers);
+        } catch (JSONException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+
+        try {
+            // Write new file locally and update JSONDataFile to match
+            FileOutputStream newFile = openFileOutput(JSONDataFile ,MODE_PRIVATE);
+            newFile.write(newJSONData.toString().getBytes());
+            newFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
     }
 //
     // commenting classifyContext out for now as it may be easier to run directly in loop above
@@ -466,6 +532,17 @@ public class ContextService extends IntentService {
         getApplication().startActivity(dialogIntent);
     }
 
+    private void sendMessageToClient (Messenger messengerOut, Bundle outBundle) {
+        // function to send message out
+        Message msg = Message.obtain();
+        msg.setData(outBundle);
+        try {
+            messengerOut.send(msg);
+        } catch (android.os.RemoteException e1) {
+            Log.w(getClass().getName(), "Exception sending message", e1);
+        }
+
+    }
 
     private Handler serviceMsgHandler = new Handler() {
         public void handleMessage(Message message) {
@@ -474,10 +551,26 @@ public class ContextService extends IntentService {
                 // Also allow for getting final model file from activity
                 String fileReceived = output.getString("fileType");
                 if (fileReceived.toLowerCase().equals("model")) {
-                    classifiedModelFile = output.getString("modelFileName");
-                    Toast.makeText(getApplicationContext(),
-                            "Model file received: " + classifiedModelFile, Toast.LENGTH_LONG)
-                            .show();
+                    String modelFile = output.getString("modelFileName");
+//                    classifiedModelFile.add(classifiedModelFile.size()+1, modelFile);
+                    Log.d("MESSAGE_HANDLER_SERVICE", "current number of classifiers: "+existingJSONClassifiers.length());
+                    //todo update JSON file to include new modelFile mapping
+                    JSONObject newJSONClassifier = new JSONObject();
+                    try {
+                        newJSONClassifier.put("id",existingJSONClassifiers.length());
+                        newJSONClassifier.put("filename",output.getString("modelFileName"));
+                        newJSONClassifier.put("labels",new JSONArray(output.getStringArrayList("labels")));
+                        newJSONClassifier.put("classifierAlgorithm",output.getString("algorithm"));
+                        newJSONClassifier.put("features", new JSONArray(output.getStringArrayList("features")));
+                        existingJSONClassifiers.put(newJSONClassifier);
+                        Log.d("MESSAGE_HANDLER_SERVICE","JSONClassifiers: "+existingJSONClassifiers.toString());
+                    } catch (JSONException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+                    //todo write JSON file
+                    writeJSONtoFile();
+
+                    Log.v("FROM_DATACOLLECT","Model file received: " + classifiedModelFile);
                 } else if (fileReceived.toLowerCase().equals("trainingdata")) {
 
                     trainingFileName = output.getString("trainingFile");
@@ -491,8 +584,7 @@ public class ContextService extends IntentService {
                             .show();
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Classification failed",
-                        Toast.LENGTH_LONG).show();
+                Log.d("FROM_DATACOLLECT","Training failed");
             }
             // after return received from activity, set activity running to false
             activityRunning = false;
@@ -514,6 +606,8 @@ public class ContextService extends IntentService {
                     dataBuffer.clear();
                     dataBuffer.offer(tempString);
 
+                }  else if (input.toLowerCase().equals("error")) {
+                   // error received
                 }
             }
         }
