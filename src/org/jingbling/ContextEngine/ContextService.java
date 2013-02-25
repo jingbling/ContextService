@@ -369,7 +369,12 @@ public class ContextService extends IntentService {
                 }
             }
         }
-        return matchOutput;
+        // check for any matches, otherwise need to return null
+        if (numMatches > 0) {
+            return matchOutput;
+        } else {
+            return null;
+        }
     }
     public void InitJSONtoHashMap (String inputJSONFile) throws IOException {
 
