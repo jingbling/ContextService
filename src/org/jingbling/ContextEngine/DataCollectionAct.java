@@ -248,6 +248,10 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 if (returnBundle != null) {
                     msgToService.setData(returnBundle);
                     try {
+                        // handle leaving training immediately without doing anything
+                        if (returnBundle.get("fileType")==null) {
+                            returnBundle.putString("fileType","none");
+                        }
                         messengerToService.send(msgToService);
                     } catch (android.os.RemoteException e1) {
                         Log.w(getClass().getName(), "Exception sending message from DataCollectionAct", e1);

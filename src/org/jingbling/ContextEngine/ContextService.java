@@ -113,14 +113,16 @@ public class ContextService extends IntentService {
             return;
         }
 
-        // Check for existing model
-        try {
-            classifiedModelFile = findClassifierMatch(features, classifierAlg, contextLabels, existingJSONClassifiers);
-        } catch (JSONException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
 
         if (action.toLowerCase().equals("classify")) {
+            // todo add check for classifier IDs currently running, and add save of which classifier IDs are running - need separate thread?
+            // Check for existing model
+            try {
+                classifiedModelFile = findClassifierMatch(features, classifierAlg, contextLabels, existingJSONClassifiers);
+            } catch (JSONException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+
             if (classifiedModelFile == null) {
 
                 // Do not automatically launch activity - instead, return a message telling application to request training activity
@@ -298,7 +300,7 @@ public class ContextService extends IntentService {
         super.onCreate();
         myReceiver = new MessageReceiver();
         registerReceiver(myReceiver, new IntentFilter("org.jingbling.ContextEngine.ContextService"));
-        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
+//        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
     }
 
     @Override
@@ -332,7 +334,7 @@ public class ContextService extends IntentService {
         String FILE_KEY = "filename";
         String ID_KEY = "id";
         int numMatches = 0;
-        ArrayList<String> matchOutput = null;
+        ArrayList<String> matchOutput =  new ArrayList<String>();
 
         // Cycle through each array entry and look for exact match of all inputs
         for (int i = 0; i<inputJSONArray.length(); i++) {
@@ -340,27 +342,27 @@ public class ContextService extends IntentService {
                 // now check that the sorted labels match between input and classifier object
                 Collections.sort(labels);
                 // Parse JSONArray into an ArrayList
-                JSONArray tempArray = inputJSONArray.getJSONObject(i).getJSONArray(LABELS_KEY);
-                ArrayList<String> tempArrayList = new ArrayList<String>();
-                for (int j=0; j<tempArray.length(); j++) {
-                    tempArrayList.add(j,tempArray.get(j).toString().toLowerCase());
+                JSONArray jsonArrayLabel = inputJSONArray.getJSONObject(i).getJSONArray(LABELS_KEY);
+                ArrayList<String> labelArrayList = new ArrayList<String>();
+                // for the two arrays to be equal,
+                for (int j=0; j<jsonArrayLabel.length(); j++) {
+                    labelArrayList.add(j, jsonArrayLabel.get(j).toString().toLowerCase());
                 }
-                Collections.sort(tempArrayList);
+                Collections.sort(labelArrayList);
 
-                if (labels.equals(tempArrayList)) {
+                if (labels.equals(labelArrayList)) {
                     // Continue in same fashion to check the features array
                     // now check that the sorted labels match between input and classifier object
                     Collections.sort(features);
                     // Parse JSONArray into an ArrayList
-                    JSONArray tempArray2 = inputJSONArray.getJSONObject(i).getJSONArray(FEATURES_KEY);
-                    ArrayList<String> tempArrayList2 = new ArrayList<String>();
-                    for (int count=0; count<tempArray2.length(); count++) {
-                        tempArrayList2.add(count,tempArray2.get(count).toString().toLowerCase());
+                    JSONArray jsonArrayFeat = inputJSONArray.getJSONObject(i).getJSONArray(FEATURES_KEY);
+                    ArrayList<String> featArrayList = new ArrayList<String>();
+                    for (int count=0; count<jsonArrayFeat.length(); count++) {
+                        featArrayList.add(count, jsonArrayFeat.get(count).toString().toLowerCase());
                     }
-                    Collections.sort(tempArrayList2);
-                    if (features.equals(tempArrayList2)) {
+                    Collections.sort(featArrayList);
+                    if (features.equals(featArrayList)) {
                         // all aspects match, add filename to output arraylist and increment counter
-                        matchOutput = new ArrayList<String>();
                         matchOutput.add(numMatches,inputJSONArray.getJSONObject(i).getString(FILE_KEY));
                         numMatches++;
                     }
@@ -552,24 +554,36 @@ public class ContextService extends IntentService {
                 String fileReceived = output.getString("fileType");
                 if (fileReceived.toLowerCase().equals("model")) {
                     String modelFile = output.getString("modelFileName");
-//                    classifiedModelFile.add(classifiedModelFile.size()+1, modelFile);
-                    Log.d("MESSAGE_HANDLER_SERVICE", "current number of classifiers: "+existingJSONClassifiers.length());
-                    //todo update JSON file to include new modelFile mapping
-                    JSONObject newJSONClassifier = new JSONObject();
+                    String modelAlgorithm = output.getString("algorithm");
+                    ArrayList<String> modelLabels = output.getStringArrayList("labels");
+                    ArrayList<String> modelFeatures = output.getStringArrayList("features");
+
+                    // first check if this is a unique entry
+                    ArrayList<String> matchFile = null;
                     try {
-                        newJSONClassifier.put("id",existingJSONClassifiers.length());
-                        newJSONClassifier.put("filename",output.getString("modelFileName"));
-                        newJSONClassifier.put("labels",new JSONArray(output.getStringArrayList("labels")));
-                        newJSONClassifier.put("classifierAlgorithm",output.getString("algorithm"));
-                        newJSONClassifier.put("features", new JSONArray(output.getStringArrayList("features")));
-                        existingJSONClassifiers.put(newJSONClassifier);
-                        Log.d("MESSAGE_HANDLER_SERVICE","JSONClassifiers: "+existingJSONClassifiers.toString());
+                        matchFile = findClassifierMatch(modelFeatures,modelAlgorithm,modelLabels,existingJSONClassifiers);
                     } catch (JSONException e) {
                         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
-                    //todo write JSON file
-                    writeJSONtoFile();
-
+                    if (matchFile==null){ // no matches found, save model data to data file
+    //                    classifiedModelFile.add(classifiedModelFile.size()+1, modelFile);
+                        Log.d("MESSAGE_HANDLER_SERVICE", "current number of classifiers: "+existingJSONClassifiers.length());
+                        //todo update JSON file to include new modelFile mapping
+                        JSONObject newJSONClassifier = new JSONObject();
+                        try {
+                            newJSONClassifier.put("id",existingJSONClassifiers.length());
+                            newJSONClassifier.put("filename",output.getString("modelFileName"));
+                            newJSONClassifier.put("labels",new JSONArray(modelLabels));
+                            newJSONClassifier.put("classifierAlgorithm",modelAlgorithm);
+                            newJSONClassifier.put("features", new JSONArray(modelFeatures));
+                            existingJSONClassifiers.put(newJSONClassifier);
+                            Log.d("MESSAGE_HANDLER_SERVICE","JSONClassifiers: "+existingJSONClassifiers.toString());
+                        } catch (JSONException e) {
+                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        }
+                        //todo write JSON file
+                        writeJSONtoFile();
+                    }
                     Log.v("FROM_DATACOLLECT","Model file received: " + classifiedModelFile);
                 } else if (fileReceived.toLowerCase().equals("trainingdata")) {
 
