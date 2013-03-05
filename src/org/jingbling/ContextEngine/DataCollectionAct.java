@@ -24,7 +24,6 @@ import java.util.ArrayList;
  */
 public class DataCollectionAct extends Activity implements View.OnClickListener{
     private ArrayList<String> featuresToUse;
-//    private String contextGroup;      todo no longer using contextGroup
     private ArrayList<String> contextLabels;
     private String trainingFileName;
     private String modelFileName;
@@ -73,7 +72,6 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         if (bundleFromService != null) {
             featuresToUse = bundleFromService.getStringArrayList("features");
             contextLabels = bundleFromService.getStringArrayList("contextLabels");
-//            contextGroup = bundleFromService.getString("context");
             messengerToService = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
             msgToService = Message.obtain();
         }

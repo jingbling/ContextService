@@ -47,11 +47,17 @@ public class FeatureCollectionService extends Service implements SensorEventList
     private static ArrayBlockingQueue<Double> accelSensorYBuffer;
     private static ArrayBlockingQueue<Double> accelSensorZBuffer;
     private static ArrayBlockingQueue<Double> accelSensorMagBuffer;
+    private static ArrayBlockingQueue<Double> gyroSensorXBuffer;
+    private static ArrayBlockingQueue<Double> gyroSensorYBuffer;
+    private static ArrayBlockingQueue<Double> gyroSensorZBuffer;
+    private static ArrayBlockingQueue<Double> gyroSensorMagBuffer;
     private static ArrayBlockingQueue<Double> locationDataBuffer;
     private static ArrayBlockingQueue<Double> orientDataBuffer;
 
     // for features calculation
     private int accelFFTBuffSize= 64; //number of points to collect for FFT calculation
+    private int gyroBuffSize = 64;
+    private int orientBuffSize = 12;
     calculateFeatures saveDataTask=null;
 
     // for classifying and sending message back to service
@@ -66,10 +72,17 @@ public class FeatureCollectionService extends Service implements SensorEventList
 //        accelSensorYBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
 //        accelSensorZBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
         accelSensorMagBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
+        gyroSensorMagBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
+        orientDataBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
 
         saveDataTask = new calculateFeatures();
 
         featuresAccepted.add(0,"accelmag.fft");
+//        featuresAccepted.add(featuresAccepted.size(),"accelmagavg.fft");
+//        featuresAccepted.add(featuresAccepted.size(),"accelmagmed.fft");
+//        featuresAccepted.add(featuresAccepted.size(),"gyromag");
+//        featuresAccepted.add(featuresAccepted.size(),"gyromag");
+
         super.onCreate();
 //        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
 
@@ -81,7 +94,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
         // grab info from bundle
         Bundle inputExtras = intent.getExtras();
         featureList = inputExtras.getStringArrayList("features");
-        dataCaptureFile = new File(inputExtras.getString("filename"));
+        dataCaptureFile = new File(inputExtras.getString("trainingFile"));
         intLabel = inputExtras.getInt("labelID");
         stringLabel = inputExtras.getString("labelName");
         action = inputExtras.getString("action");

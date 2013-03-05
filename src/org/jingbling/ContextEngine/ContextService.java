@@ -235,24 +235,29 @@ public class ContextService extends IntentService {
 
             }
         } else if(action.equals("train")){ //action = train
-
-            //no classifier found, launch activity to train model
-            saveTrainingData(features, contextGroup, contextLabels);
-            // set activity running to pause service until return value given from data collection activity
-            activityRunning = true;
-            // While waiting for Training session to finish, suspend thread
-            while(activityRunning) {
-                try {
-                    HandlerThread.sleep(1000,1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            //check for valid inputs - if no labels or features selected, exit and return an error
+            if (contextLabels.isEmpty() || features.isEmpty()) {
+                outputBundle.putInt("return", 1);
+                outputBundle.putString("message","Please select at least one label and feature");
+            } else {
+                //no classifier found, launch activity to train model
+                saveTrainingData(features, contextLabels);
+                // set activity running to pause service until return value given from data collection activity
+                activityRunning = true;
+                // While waiting for Training session to finish, suspend thread
+                while(activityRunning) {
+                    try {
+                        HandlerThread.sleep(1000,1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
                 }
+
+                // if training success (model file not null), return message
+                outputBundle.putInt("return", 1);
+                outputBundle.putString("message","left training activity");
+
             }
-
-            // if training success (model file not null), return message
-            outputBundle.putInt("return", 1);
-            outputBundle.putString("message","left training activity");
-
 //            //todo automatically train data based on training file created
 //            if (trainingFileName == null) {
 //                // todo training file was not created correctly, return error
@@ -521,14 +526,13 @@ public class ContextService extends IntentService {
 //        return returnValue;
 //    }
 
-    public void saveTrainingData(ArrayList featuresToUse, String contextGroup, ArrayList contextLabels) {
+    public void saveTrainingData(ArrayList featuresToUse, ArrayList contextLabels) {
         //launch activity that will guide user through recording labeled data
         Intent dialogIntent = new Intent(getBaseContext(), DataCollectionAct.class);
 //        dialogIntent.setAction(Intent.ACTION_VIEW);
 //        dialogIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         dialogIntent.putExtra("features", featuresToUse);
-        dialogIntent.putExtra("context", contextGroup);
         dialogIntent.putExtra("contextLabels", contextLabels);
 
         // Create a new Messenger for the communication back
