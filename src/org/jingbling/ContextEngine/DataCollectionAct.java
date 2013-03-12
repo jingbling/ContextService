@@ -36,8 +36,15 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private Button bTrainClassifierBtn;
     private Button bExitBtn;
 
-    private Intent dataCollectIntent;
+    private Intent featureCollectIntent;
     private boolean serviceIsStarted = false;
+    // message keys and values
+    public static String ACTION_KEY = "action";
+    public static String FEATURES_KEY = "features";
+    public static String LABELS_KEY = "contextLabels";
+    public static String LABELSID_KEY = "labelID";
+    public static String TRAINING_FILE_KEY="trainingFile";
+    public static String TRAIN_ACTION = "train";
 
     private TextView bCountDownText;
     private EditText bFilename;
@@ -70,7 +77,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         // retrieve values from service
         bundleFromService = getIntent().getExtras();
         if (bundleFromService != null) {
-            featuresToUse = bundleFromService.getStringArrayList("features");
+            featuresToUse = bundleFromService.getStringArrayList(FEATURES_KEY);
             contextLabels = bundleFromService.getStringArrayList("contextLabels");
             messengerToService = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
             msgToService = Message.obtain();
@@ -127,7 +134,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
         // Setup data collection service intent
 
-        dataCollectIntent = new Intent(this, FeatureCollectionService.class);
+        featureCollectIntent = new Intent(this, FeatureCollectionService.class);
 
         // Setup other common data
         // grab training filename to write
@@ -135,11 +142,10 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/inputs/");
         dir.mkdirs();
 
-        extras.putInt("labelID", bContextToTrainSelection.getSelectedItemPosition() - 1);
-        extras.putString("labelName", bContextToTrainSelection.getSelectedItem().toString());
-        extras.putStringArrayList("features",featuresToUse);
-        extras.putString("filename",trainingFileName);
-        extras.putString("action", "training");
+        extras.putInt(LABELSID_KEY, bContextToTrainSelection.getSelectedItemPosition() - 1);
+        extras.putString(LABELS_KEY, bContextToTrainSelection.getSelectedItem().toString());
+        extras.putStringArrayList(FEATURES_KEY,featuresToUse);
+        extras.putString(ACTION_KEY, TRAIN_ACTION);
         returnBundle = new Bundle();
 
     }
@@ -155,9 +161,10 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
                 trainingCountdown.start();
 
-                // todo Use feature server to save desired features to specified file for training
-                dataCollectIntent.putExtras(extras);
-                startService(dataCollectIntent);
+                // Use feature server to save desired features to specified file for training
+                extras.putString(TRAINING_FILE_KEY,trainingFileName);
+                featureCollectIntent.putExtras(extras);
+                startService(featureCollectIntent);
 
                 bStopTrainBtn.setEnabled(true);
 
@@ -165,7 +172,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 // will determine which file (model or training file, respectively) will be returned to service
 
                 returnBundle.putString("fileType", "trainingData");
-                returnBundle.putString("trainingFile", trainingFileName);
+                returnBundle.putString(TRAINING_FILE_KEY, trainingFileName);
 //                    returnBundle.putBoolean("trainingFinished", false);
 
                 break;
@@ -175,7 +182,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 bCountDownText.setText("0");
                 CountTimeRemaining = 0;
                 // stop feature collection server
-                stopService(dataCollectIntent);
+                stopService(featureCollectIntent);
 
                 bStopTrainBtn.setEnabled(false);
                 break;
@@ -192,7 +199,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                             "Writing model file: "+modelFileName,
                             Toast.LENGTH_LONG).show();
                     // stop feature collection server
-                    stopService(dataCollectIntent);
+                    stopService(featureCollectIntent);
 
                     // Run following in separate thread
                     Runnable r = new Runnable() {
@@ -224,7 +231,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                                 returnBundle.putString("algorithm","libsvm");
                                 returnBundle.putString("modelFileName",modelFileName);
                                 //                    returnBundle.putString("contextGroup", contextGroup);
-                                returnBundle.putStringArrayList("features", featuresToUse);
+                                returnBundle.putStringArrayList(FEATURES_KEY, featuresToUse);
                                 returnBundle.putStringArrayList("labels",contextLabels);
 
 
@@ -276,7 +283,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
             bCountDownText.setText("0");
 //            bCountDownText.setText("done!");
             //todo - automatically stop collection service after timer elapses
-            stopService(dataCollectIntent);
+            stopService(featureCollectIntent);
         }
     }
 

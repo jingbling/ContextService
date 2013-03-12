@@ -37,10 +37,20 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
     private StringBuffer dataToWrite=new StringBuffer(); //temp buffer to store data to be written to file or to classify
     private File dataCaptureFile;   // file for saving data for training
+    // more blocking queues to be added as mailboxes to classifier service
+    ArrayBlockingQueue<String> classifierFeaturesBuffer;
 
     private int intLabel; //for libSVM, use integer labels
     private String stringLabel; //for other classifier algorithms, may want string labels
     private String action; //desired feature collection action - either collecting, or classifying
+    public static String TRAIN_ACTION = "train";
+    public static String CLASSIFY_ACTION = "classify";
+    public static String ACTION_KEY = "action";
+    public static String FEATURES_KEY = "features";
+    public static String LABELS_KEY = "contextLabels";
+    public static String LABELSID_KEY = "labelID";
+    public static String TRAINING_FILE_KEY="trainingFile";
+    public static String BUFFER_SIZE_KEY="bufferSize";
 
     //buffers for saving feature data
     private static ArrayBlockingQueue<Double> accelSensorXBuffer;
@@ -55,6 +65,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
     private static ArrayBlockingQueue<Double> orientDataBuffer;
 
     // for features calculation
+    // todo save only max buffer depths
     private int accelFFTBuffSize= 64; //number of points to collect for FFT calculation
     private int gyroBuffSize = 64;
     private int orientBuffSize = 12;
@@ -67,6 +78,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
     @Override
     public void onCreate() {
+        Log.d("FEATURE_COLLECT", "running Feature Collect ON CREATE");
         //todo allocate buffer sizes - for now just do accelerometer data
 //        accelSensorXBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
 //        accelSensorYBuffer = new ArrayBlockingQueue<Double>(accelFFTBuffSize*2);
@@ -84,25 +96,31 @@ public class FeatureCollectionService extends Service implements SensorEventList
 //        featuresAccepted.add(featuresAccepted.size(),"gyromag");
 
         super.onCreate();
-//        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
+        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
 
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        Log.d("FEATURE_COLLECT", "starting Feature Collection Service");
         // grab info from bundle
         Bundle inputExtras = intent.getExtras();
-        featureList = inputExtras.getStringArrayList("features");
-        dataCaptureFile = new File(inputExtras.getString("trainingFile"));
-        intLabel = inputExtras.getInt("labelID");
-        stringLabel = inputExtras.getString("labelName");
-        action = inputExtras.getString("action");
+        featureList = inputExtras.getStringArrayList(FEATURES_KEY);
+        intLabel = inputExtras.getInt(LABELSID_KEY);
+        stringLabel = inputExtras.getString(LABELS_KEY);
+        action = inputExtras.getString(ACTION_KEY);
 //        messengerToService = (Messenger) inputExtras.get ("SERVICE_MESSENGER");
 //        msgToService = Message.obtain();
+        // check for training file only if this is a training action
+        if (action.equals(TRAIN_ACTION))
+            dataCaptureFile = new File(inputExtras.getString(TRAINING_FILE_KEY));
+        else
+            classifierFeaturesBuffer = new ArrayBlockingQueue<String>(inputExtras.getInt(BUFFER_SIZE_KEY));
 
         // initialize sensor manager
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
 
         //Depending on features desired, select which sensors to register
         for (int i=0;i<featureList.size();i++) {
@@ -155,6 +173,10 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
     }
 
+    public String getFeatureBufferData() throws InterruptedException {
+        return classifierFeaturesBuffer.take();
+    }
+
     private class calculateFeatures extends AsyncTask<Void,Void,Void> {
         @Override
         protected Void doInBackground(Void... arg0) {
@@ -193,28 +215,38 @@ public class FeatureCollectionService extends Service implements SensorEventList
                                 im[i]= .0; // clear imaginary field
                             }
                             tempBuffer.append(String.format("%n"));
+                            if (action.equals(CLASSIFY_ACTION)) {
+                                // if using data to classify, add to blocking queue
+                                // Want to always replace buffer with latest
+                                if (classifierFeaturesBuffer.offer(tempBuffer.toString())==false){
+                                    // if full, remove oldest value and add current buffer
+                                    classifierFeaturesBuffer.take();
+                                }
+                                classifierFeaturesBuffer.put(tempBuffer.toString());
 
-                            // Once tempBuffer is built, add to dataToWrite
-                            dataToWrite.append(tempBuffer);
+                            } else {
+                                // Once tempBuffer is built, add to dataToWrite
+                                dataToWrite.append(tempBuffer);
+                            }
 
                             //clear tempBuffer
                             if (tempBuffer.length()>0)
                                 tempBuffer.delete(0,tempBuffer.length());
 
-                            //if action is not to save item to file, send broadcast of data to service, otherwise append to buffer to write
-                            if (action.equals("classify")) {
-                                // todo broadcast dataToWrite and clear buffer
-                                returnBundle.putString("fileType","datatolabel");
-                                returnBundle.putString("inputData",dataToWrite.toString());
-                                // Send message with latest file information to service
-                                //                                msgToService.setData(returnBundle);
-                                broadcastReturnIntent = new Intent("org.jingbling.ContextEngine.ContextService");
-                                broadcastReturnIntent.putExtras(returnBundle);
-                                sendBroadcast(broadcastReturnIntent);
-
-                                if (dataToWrite.length()>0)
-                                    dataToWrite.delete(0,dataToWrite.length());
-                            }
+//                            //if action is not to save item to file, send broadcast of data to service, otherwise append to buffer to write
+//                            if (action.equals(CLASSIFY_ACTION)) {
+//                                // todo  replace this broadcast with adding to a mailbox, then add function to return contents of mailbox
+//                                returnBundle.putString("fileType","datatolabel");
+//                                returnBundle.putString("inputData",dataToWrite.toString());
+//                                // Send message with latest file information to service
+//                                //                                msgToService.setData(returnBundle);
+//                                broadcastReturnIntent = new Intent("org.jingbling.ContextEngine.ContextService");
+//                                broadcastReturnIntent.putExtras(returnBundle);
+//                                sendBroadcast(broadcastReturnIntent);
+//
+//                                if (dataToWrite.length()>0)
+//                                    dataToWrite.delete(0,dataToWrite.length());
+//                            }
                         }
 
                     } catch (Exception e) {
@@ -230,6 +262,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
         return null;
         }
+
 
         @Override
         protected void onCancelled() {
@@ -257,11 +290,19 @@ public class FeatureCollectionService extends Service implements SensorEventList
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
+    IBinder mBinder = new LocalBinder();
+
+
     @Override
     public IBinder onBind(Intent intent) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return mBinder;
     }
 
+    public class LocalBinder extends Binder {
+        public FeatureCollectionService getServerInstance() {
+            return FeatureCollectionService.this;
+        }
+    }
 
     @Override
     public void onDestroy() {
@@ -362,4 +403,6 @@ public class FeatureCollectionService extends Service implements SensorEventList
         }
         return writeResultOK;
     }
+
+    //todo add code to handle joining / leaving requests
 }
