@@ -96,7 +96,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
 //        featuresAccepted.add(featuresAccepted.size(),"gyromag");
 
         super.onCreate();
-        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
+//        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
 
     }
 
@@ -391,14 +391,12 @@ public class FeatureCollectionService extends Service implements SensorEventList
 
         mSensorManager.unregisterListener(this);
 
-        //if training, write data to file
-        if (action == TRAIN_ACTION) {
-            boolean writeResult = writeFile (dataCaptureFile.toString(),dataToWrite);
-            if (writeResult) {
-                // write successful, so clear dataToWrite for next round
-                if (dataToWrite.length()>0)
-                    dataToWrite.delete(0,dataToWrite.length());
-            }
+        //currently only using this function when training, so write data to file
+        boolean writeResult = writeFile (dataCaptureFile.toString(),dataToWrite);
+        if (writeResult) {
+            // write successful, so clear dataToWrite for next round
+            if (dataToWrite.length()>0)
+                dataToWrite.delete(0,dataToWrite.length());
         }
 
     }

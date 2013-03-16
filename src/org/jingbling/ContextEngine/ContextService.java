@@ -15,7 +15,7 @@ import org.json.JSONObject;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+    import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -375,7 +375,8 @@ public class ContextService extends Service {
             }
             // save current model to hashmap for id lookup
             runningClassModelHashMap.put(classifierID, currentSVMModel1);
-            // also save hashmap of labels
+            // also save hashmap of labels, after sorting contextLabels alphabetically
+            Collections.sort(contextLabels, String.CASE_INSENSITIVE_ORDER);
             for (int i=0;i<contextLabels.size();i++) {
                 labelHash1.put(i-1,contextLabels.get(i));
             }
@@ -663,7 +664,7 @@ public class ContextService extends Service {
                 if (fileReceived.toLowerCase().equals("model")) {
                     String modelFile = output.getString("modelFileName");
                     String modelAlgorithm = output.getString("algorithm");
-                    ArrayList<String> modelLabels = output.getStringArrayList("labels");
+                    ArrayList<String> modelLabels = output.getStringArrayList(LABELS_KEY);
                     ArrayList<String> modelFeatures = output.getStringArrayList("features");
 
                     // first check if this is a unique entry

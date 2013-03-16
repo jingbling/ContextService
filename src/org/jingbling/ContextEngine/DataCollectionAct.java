@@ -15,6 +15,7 @@ import android.widget.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created with IntelliJ IDEA.
@@ -94,7 +95,9 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         bundleFromService = getIntent().getExtras();
         if (bundleFromService != null) {
             featuresToUse = bundleFromService.getStringArrayList(FEATURES_KEY);
-            contextLabels = bundleFromService.getStringArrayList("contextLabels");
+            contextLabels = bundleFromService.getStringArrayList(LABELS_KEY);
+            // sort labels key for consist mapping when training
+            Collections.sort(contextLabels, String.CASE_INSENSITIVE_ORDER);
             messengerToService = (Messenger) bundleFromService.get("SERVICE_MESSENGER");
             msgToService = Message.obtain();
         }
@@ -158,8 +161,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         dir = new File(sdCard.getAbsolutePath() + "/ContextServiceFiles/inputs/");
         dir.mkdirs();
 
-        extras.putInt(LABELSID_KEY, bContextToTrainSelection.getSelectedItemPosition() - 1);
-        extras.putString(LABELS_KEY, bContextToTrainSelection.getSelectedItem().toString());
+
         extras.putStringArrayList(FEATURES_KEY,featuresToUse);
         extras.putString(ACTION_KEY, TRAIN_ACTION);
         returnBundle = new Bundle();
@@ -178,6 +180,8 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 trainingCountdown.start();
 
                 // Use feature server to save desired features to specified file for training
+                extras.putInt(LABELSID_KEY, bContextToTrainSelection.getSelectedItemPosition() - 1);
+                extras.putString(LABELS_KEY, bContextToTrainSelection.getSelectedItem().toString());
                 extras.putString(TRAINING_FILE_KEY,trainingFileName);
                 featureCollectIntent.putExtras(extras);
                 startService(featureCollectIntent);
@@ -251,7 +255,13 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                                 returnBundle.putString("modelFileName",modelFileName);
                                 //                    returnBundle.putString("contextGroup", contextGroup);
                                 returnBundle.putStringArrayList(FEATURES_KEY, featuresToUse);
-                                returnBundle.putStringArrayList("labels",contextLabels);
+                                // make sure that we send context labels back in the order they are shown here
+                                ArrayList<String> tempLabelList = new ArrayList<String>(contextLabels.size());
+                                for (int i=0;i<contextLabels.size();i++) {
+
+                                    tempLabelList.add(i, bContextToTrainSelection.getItemAtPosition(i).toString());
+                                }
+                                returnBundle.putStringArrayList(LABELS_KEY,tempLabelList);
 
 
                             }
