@@ -1,7 +1,9 @@
 package org.jingbling.ContextEngine;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.os.*;
 import android.text.Editable;
@@ -37,6 +39,7 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private Button bExitBtn;
 
     private Intent featureCollectIntent;
+    FeatureCollectionService trainingFeatureServer;
     private boolean serviceIsStarted = false;
     // message keys and values
     public static String ACTION_KEY = "action";
@@ -67,6 +70,19 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
     private Bundle extras = new Bundle();
     private Bundle bundleFromService;
     private Bundle returnBundle;
+
+    ServiceConnection trainingFeatureConnection = new ServiceConnection() {
+
+        public void onServiceDisconnected(ComponentName name) {
+            trainingFeatureConnection = null;
+        }
+
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            FeatureCollectionService.LocalBinder mLocalBinder = (FeatureCollectionService.LocalBinder)service;
+            trainingFeatureServer = mLocalBinder.getServerInstance();
+        }
+    };
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -132,9 +148,9 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
             }
         });
 
-        // Setup data collection service intent
-
-        featureCollectIntent = new Intent(this, FeatureCollectionService.class);
+        // Setup data collection service intent binding
+        featureCollectIntent = new Intent("org.jingbling.ContextEngine.FeatureCollectionService");
+        bindService(featureCollectIntent, trainingFeatureConnection, BIND_AUTO_CREATE);
 
         // Setup other common data
         // grab training filename to write
@@ -181,9 +197,12 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
                 trainingCountdown.cancel();
                 bCountDownText.setText("0");
                 CountTimeRemaining = 0;
-                // stop feature collection server
-                stopService(featureCollectIntent);
-
+                // stop feature collection server and write data
+                if (trainingFeatureServer == null) {
+                    Log.d("ABORT TRAINING","trainingFeatureServer is null, not bound to feature collection");
+                } else {
+                    trainingFeatureServer.stopDataCollect();
+                }
                 bStopTrainBtn.setEnabled(false);
                 break;
 
@@ -195,9 +214,9 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
 
                     //todo decide where to implement train data - for now train LibSVM only from this activity
                     // Open a file explorer to choose training data file     ??? TO BE ADDED
-                    Toast.makeText(getApplicationContext(),
-                            "Writing model file: "+modelFileName,
-                            Toast.LENGTH_LONG).show();
+//                    Toast.makeText(getApplicationContext(),
+//                            "Writing model file: "+modelFileName,
+//                            Toast.LENGTH_LONG).show();
                     // stop feature collection server
                     stopService(featureCollectIntent);
 
@@ -282,8 +301,12 @@ public class DataCollectionAct extends Activity implements View.OnClickListener{
         public void onFinish() {
             bCountDownText.setText("0");
 //            bCountDownText.setText("done!");
-            //todo - automatically stop collection service after timer elapses
-            stopService(featureCollectIntent);
+            //stop data collection when timer elapses
+            if (trainingFeatureServer == null) {
+                Log.d("TRAINING TIME FINISH","trainingFeatureServer is null, not bound to feature collection");
+            } else {
+                trainingFeatureServer.stopDataCollect();
+            }
         }
     }
 

@@ -1,7 +1,9 @@
 package org.jingbling.ContextEngine;
 
 import android.app.Service;
-import android.content.*;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.*;
 import android.util.Log;
 import android.widget.Toast;
@@ -15,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -87,16 +89,19 @@ public class ContextService extends Service {
 
     private Handler timingHandler = new Handler();
     private long elapsedTime = 0;
-    MessageReceiver myReceiver = null;
+//    MessageReceiver myReceiver = null;
     Boolean receiverRegistered = false;
-    //TODO eventually add more svm_model models
+    //TODO eventually add more svm_model models and respective hashmaps
     private svm_model currentSVMModel1;
+    HashMap labelHash1 = new HashMap();
     private ArrayList<Integer> currentlyExecutingModels = new ArrayList<Integer>();
 
     static final int LAUNCH_DATACOLLECT = 1;
 
     final Messenger mMessenger = new Messenger(new IncomingHandler());
-
+    private static final ScheduledExecutorService ScheduledWorker =
+            Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture<?> scheduleWorkerFuture;
 
     class IncomingHandler extends Handler {
         @Override
@@ -216,7 +221,6 @@ public class ContextService extends Service {
                 requestedClassifierID = inputExtras.getInt(CLASSIFIER_ID_KEY);
                 requestedClassifierPeriod = inputExtras.getInt(LABEL_RATE_KEY);
 
-
                 // start service for grabbing feature data for classifier input
                 Bundle extras = new Bundle();
                 extras.putInt(LABELSID_KEY, -99); // chose a bogus value as this is not needed for classifying
@@ -232,7 +236,8 @@ public class ContextService extends Service {
 
                 startService(featureCollectIntent);
                 Runnable classify = new ClassifyContext(requestedClassifierID,requestedClassifierPeriod,contextLabels, mailboxOut);
-                new Thread(classify).start();
+//                new Thread(classify).start();
+                scheduleWorkerFuture = ScheduledWorker.scheduleWithFixedDelay(classify, requestedClassifierPeriod, requestedClassifierPeriod, TimeUnit.MILLISECONDS);
 
                 // send a message that model has been loaded
                 outputBundle.putInt(OUTPUT_RETURNVAL_KEY, CLASSIFIER_RUNNING);
@@ -308,6 +313,9 @@ public class ContextService extends Service {
         //todo Before exiting, write hashmap to file
         Log.d("CONTEXTSERVICE","ON DESTROY METHOD CALLED");
         runClassify = false;
+        // stop threads
+        scheduleWorkerFuture.cancel(true);
+        ScheduledWorker.shutdown();
     }
 
 
@@ -332,6 +340,7 @@ public class ContextService extends Service {
         private long duration;
         private ArrayBlockingQueue<String> mailbox;
         private long elapsedTime;
+        private final Handler classHandler = new Handler();
 
         public ClassifyContext(int classifierID, int desiredPeriod, ArrayList<String> contextLabels, ArrayBlockingQueue<String> mailbox) {
             // start classifier
@@ -366,35 +375,37 @@ public class ContextService extends Service {
             }
             // save current model to hashmap for id lookup
             runningClassModelHashMap.put(classifierID, currentSVMModel1);
+            // also save hashmap of labels
+            for (int i=0;i<contextLabels.size();i++) {
+                labelHash1.put(i-1,contextLabels.get(i));
+            }
         }
         public void run(){
-            HashMap labelHash = new HashMap();
-            for (int i=0;i<contextLabels.size();i++) {
-                labelHash.put(i-1,contextLabels.get(i));
-            }
 
+//            classHandler.postDelayed(this, this.period);
 
             while (runClassify) {
 
                 // if we have not yet reached end time, wait a delay
-                if (this.elapsedTime<duration){
-                    this.elapsedTime+=period;
-                    try {
-                        HandlerThread.sleep(period);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                    }
-                } else {
-                    // max duration reached, end classifying
-                    runClassify = false;
-                    Log.d("CLASSIFY_THREAD", "completed thread, max duration reached");
-                }
+//                if (this.elapsedTime<duration){
+//                    this.elapsedTime+=period;
+//                    try {
+//                        HandlerThread.sleep(period);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+//                    }
+//                } else {
+//                    // max duration reached, end classifying
+//                    runClassify = false;
+//                    Log.d("CLASSIFY_THREAD", "completed thread, max duration reached");
+//                }
 
                 Log.d("CONTEXT_SERVICE_RUN_CLASSIFY", "in while loop...");
                 // while the duration to run the classifier has not completed, grab input data from feature collection service
                 // and classify and return depending on frequency.
                 // Run classifier model to determine label
                 String classifiedLabel = new String();
+                classifiedLabel = "";
 
                 if (classifierAlg.toLowerCase().equals("libsvm")) {
 
@@ -410,36 +421,35 @@ public class ContextService extends Service {
                         } catch (InterruptedException e) {
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                         }
-                        try {
-                            classifiedLabel = classifierServer.evaluateSVMModel(inputString, labelHash, currentSVMModel1);
-                        } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        if (inputString == null) {
+                            Log.d("CONTEXT_SERVICE_RUN_CLASSIFY", "ERROR, no input to classify");
+                        } else {
+                            try {
+                                classifiedLabel = classifierServer.evaluateSVMModel(inputString, labelHash1, currentSVMModel1);
+                                Log.d("CONTEXT_SERVICE_RUN_CLASSIFY", "classifierLabel = "+classifiedLabel);
+                            } catch (IOException e) {
+                                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                            }
                         }
                     }
                 }
 
                 // add label to mailbox - check to see if mailbox is full, if so, update with latest values
-                if (classifiedLabel != "") {
+                if (classifiedLabel.equals("")==false) {
+                    Log.d("CLASSIFY_THREAD", "trying to add label to mailbox");
                     if (mailboxOut.offer(classifiedLabel)==false) {
+                        Log.d("CLASSIFY_THREAD", "trying to add label to mailbox, but full, so clear and try again");
+                        mailboxOut.clear();
                         try {
-                            mailboxOut.take();
+                            mailboxOut.put(classifiedLabel);
                         } catch (InterruptedException e) {
-                            Log.d("MAILBOX_FUNCTION", "failed to update mailbox with latest value");
+                            Log.d("MAILBOX_FUNCTION", "failed to add label to mailbox");
                             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                         }
-                    }
-                    try {
-                        mailboxOut.put(classifiedLabel);
-                    } catch (InterruptedException e) {
-                        Log.d("MAILBOX_FUNCTION", "failed to add label to mailbox");
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
                     Log.d("CLASSIFY_THREAD", "added label to mailbox");
                 }
             }
-
-            //todo for debugging do not stop service automatically - will need to add code to cleanly stop service
-//            stopService(featureCollectIntent);
         }
 
     }
@@ -704,26 +714,26 @@ public class ContextService extends Service {
     };
 
 
-    private class MessageReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle output = intent.getExtras();
-            if (output != null) {
-                String input = output.getString("fileType");
-                if (input.toLowerCase().equals("datatolabel")){
-                    Log.d("CONTEXT_SERVICE","Data input to classify: "+output.getString("inputData"));
-                    // put data into a buffer
-                    String tempString = output.getString("inputData");
-                    // there is new data available, clear existing buffer before adding to ensure classify is done on latest input
-                    dataBuffer.clear();
-                    dataBuffer.offer(tempString);
-
-                }  else if (input.toLowerCase().equals("error")) {
-                   // error received
-                }
-            }
-        }
-    }
+//    private class MessageReceiver extends BroadcastReceiver {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            Bundle output = intent.getExtras();
+//            if (output != null) {
+//                String input = output.getString("fileType");
+//                if (input.toLowerCase().equals("datatolabel")){
+//                    Log.d("CONTEXT_SERVICE","Data input to classify: "+output.getString("inputData"));
+//                    // put data into a buffer
+//                    String tempString = output.getString("inputData");
+//                    // there is new data available, clear existing buffer before adding to ensure classify is done on latest input
+//                    dataBuffer.clear();
+//                    dataBuffer.offer(tempString);
+//
+//                }  else if (input.toLowerCase().equals("error")) {
+//                   // error received
+//                }
+//            }
+//        }
+//    }
 
     public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
         for (Map.Entry<T, E> entry : map.entrySet()) {

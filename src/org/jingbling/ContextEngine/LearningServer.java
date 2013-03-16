@@ -142,6 +142,7 @@ public class LearningServer {
             Log.v("PREDICT", "predicted index = "+i);
             classifiedLabel = labelsHashMap.get(i).toString();
 
+            Log.v("PREDICT", "predicted label = "+classifiedLabel);
             return classifiedLabel;
         }
     }
