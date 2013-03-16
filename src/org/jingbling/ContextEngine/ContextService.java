@@ -183,7 +183,8 @@ public class ContextService extends Service {
                         int currentID = Integer.parseInt(existingClassifiersHashMap.get(classifiedModelFile.get(0)).toString());
                         if (runningClassModelHashMap.containsKey(currentID)){
                             // classifier requested is already being run - check that the current period is fast enough
-                            if (Integer.parseInt(classModelPeriodHashMap.get(currentID).toString())<requestedClassifierPeriod) {
+                            if (Integer.parseInt(classModelPeriodHashMap.get(currentID).toString())!=requestedClassifierPeriod) {
+                                // todo need to update this to GCF
                                 classModelPeriodHashMap.put(currentID,requestedClassifierPeriod);
                             }
                             // send message that classifier already running
