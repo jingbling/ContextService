@@ -79,7 +79,7 @@
         <TextView
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Press Exit to complete training, Train Classifier to generate classifier, and Write to save data file:"
+                android:text="Press Train Classifier to generate classifier, and Exit to save data file and exit:"
                 />
     </LinearLayout>
     <LinearLayout

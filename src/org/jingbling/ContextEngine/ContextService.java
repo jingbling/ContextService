@@ -202,6 +202,7 @@ public class ContextService extends Service {
                     }
                 } else { // classifier ID given so return latest label
                     //todo add options for blocking vs nonblocking - for now, non-blocking for latest value
+                    // todo add check that classifierID is valid
 
                     // send a message with latest label
                     outputBundle.putInt(OUTPUT_RETURNVAL_KEY, NOM_RETURN_VALUE);
@@ -371,7 +372,24 @@ public class ContextService extends Service {
             for (int i=0;i<contextLabels.size();i++) {
                 labelHash.put(i-1,contextLabels.get(i));
             }
+
+
             while (runClassify) {
+
+                // if we have not yet reached end time, wait a delay
+                if (this.elapsedTime<duration){
+                    this.elapsedTime+=period;
+                    try {
+                        HandlerThread.sleep(period);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    }
+                } else {
+                    // max duration reached, end classifying
+                    runClassify = false;
+                    Log.d("CLASSIFY_THREAD", "completed thread, max duration reached");
+                }
+
                 Log.d("CONTEXT_SERVICE_RUN_CLASSIFY", "in while loop...");
                 // while the duration to run the classifier has not completed, grab input data from feature collection service
                 // and classify and return depending on frequency.
@@ -417,19 +435,6 @@ public class ContextService extends Service {
                         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                     }
                     Log.d("CLASSIFY_THREAD", "added label to mailbox");
-                }
-                // if we have not yet reached end time, wait a delay
-                if (this.elapsedTime<duration){
-                    this.elapsedTime+=period;
-                    try {
-                        HandlerThread.sleep(period);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                    }
-                } else {
-                    // max duration reached, end classifying
-                    runClassify = false;
-                    Log.d("CLASSIFY_THREAD", "completed thread, max duration reached");
                 }
             }
 

@@ -96,7 +96,7 @@ public class FeatureCollectionService extends Service implements SensorEventList
 //        featuresAccepted.add(featuresAccepted.size(),"gyromag");
 
         super.onCreate();
-        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
+//        android.os.Debug.waitForDebugger(); //todo TO BE REMOVED
 
     }
 
